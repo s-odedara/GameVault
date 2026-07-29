@@ -203,7 +203,7 @@ function Layout() {
           <Route path="/game/:id"                 element={<GameDetail />} />
           <Route path="/platform/:id"             element={<CategoryPage />} />
           <Route path="/login"                    element={<Login />} />
-          <Route path="/signup"                   element={<Signup />} />
+          <Route path="/signup"                   element={<Login />} />
           <Route path="/global-game/:id"          element={<GlobalGameDetail />} />
           <Route path="/collection/:type"         element={<CollectionPage />} />
           <Route path="/community"                element={<Community />} />

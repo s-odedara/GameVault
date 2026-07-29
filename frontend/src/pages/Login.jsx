@@ -1,14 +1,20 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { API_BASE_URL } from '../utils/constants';
 
 function Login() {
-  const [isLogin, setIsLogin]   = useState(true)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [isLogin, setIsLogin]   = useState(location.pathname !== '/signup')
+
+  // Keep state in sync if URL changes (e.g. clicking Signup in Navbar while on Login page)
+  useEffect(() => {
+    setIsLogin(location.pathname !== '/signup')
+  }, [location.pathname])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
 
   const validateForm = () => {
     if (!isLogin) {
