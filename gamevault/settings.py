@@ -15,6 +15,23 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # jao to deploy hote hi Django crash na ho ("ImproperlyConfigured" error).
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173', cast=Csv())
+import os
+from pathlib import Path
+from decouple import config, Csv
+import dj_database_url
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Security: Loaded from .env
+SECRET_KEY = config('SECRET_KEY')
+
+# Debug is False by default for production safety
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+# 🔥 FIX: default add kiya taaki agar .env me variable set karna bhool
+# jao to deploy hote hi Django crash na ho ("ImproperlyConfigured" error).
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173', cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
@@ -23,7 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
+    'cloudinary',
     
     # Third-party
     'rest_framework',
@@ -160,18 +179,25 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# 🔥 CRITICAL FIX: MEDIA_URL / MEDIA_ROOT nowhere defined earlier,
-# but gamevault/urls.py already referenced settings.MEDIA_URL — that
-# used to crash Django on boot the moment DEBUG=True, and even when it
-# didn't crash, uploaded game cover images had nowhere to be saved/served.
+# 🔥 Cloudinary Integration for Media Uploads in Production
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
+    'API_KEY': config('CLOUDINARY_API_KEY', default=''),
+    'API_SECRET': config('CLOUDINARY_API_SECRET', default='')
+}
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# If Cloudinary is configured, use it for default media uploads
+if config('CLOUDINARY_CLOUD_NAME', default=''):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    # Fallback for local development if Cloudinary is not set up
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # 🔥 NAYA: Marketplace payment gateway (Razorpay) config.
 # TEST mode keys yahan se free milti hain (koi KYC/business account
 # zaroori nahi TEST mode ke liye): https://dashboard.razorpay.com/app/keys
 # .env mein daalo — code kabhi hardcode mat karna.
-RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
 
 # 🔥 NAYA (Security): Server-side error logging. Deployment platforms
