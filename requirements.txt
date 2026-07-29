@@ -24,3 +24,4 @@ twilio==9.10.9
 # 🔥 Cloudinary for Media Uploads (Ephemeral FS bypass)
 cloudinary==1.45.0
 django-cloudinary-storage==0.3.0
+setuptools
