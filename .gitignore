@@ -1,0 +1,36 @@
+# ============================================================
+# 🔥 SECURITY: Ye file pehle exist hi nahi karti thi — matlab
+# .env (real secret keys), database, aur venv/node_modules sab
+# git commit ho sakte the. Ye sabse zaroori security fix hai.
+# ============================================================
+
+# --- Secrets: KABHI commit mat karna ---
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# --- Backend (Django/Python) ---
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+*.log
+
+# --- Frontend (React/Vite) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# --- Editor / OS junk ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

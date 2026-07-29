@@ -1,0 +1,27 @@
+<h2>Add New Game</h2>
+<!-- enctype zaruri hai image upload ke liye -->
+<form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %} 
+    
+    <label>Game Title:</label><br>
+    <input type="text" name="title" required><br><br>
+
+    <label>Genre:</label><br>
+    <input type="text" name="genre" required><br><br>
+
+    <label>Platform:</label><br>
+    <input type="text" name="platform" required><br><br>
+
+    <!-- NAYA: Date format ke liye type="date" lagana zaruri hai -->
+    <label>Release Date:</label><br>
+    <input type="date" name="release_date" required><br><br>
+
+    <!-- NAYA: Decimal (point wale numbers) ke liye type="number" aur step="0.1" -->
+    <label>Rating (Out of 10, e.g., 8.5):</label><br>
+    <input type="number" name="rating" step="0.1" max="10" required><br><br>
+    
+    <label>Upload Cover Photo (Optional):</label><br>
+    <input type="file" name="image" accept="image/*"><br><br>
+    
+    <button type="submit">Save Game</button>
+</form>

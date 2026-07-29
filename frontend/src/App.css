@@ -1,0 +1,9 @@
+/* App.css — kept minimal. All design is in index.css */
+/* Bootstrap imported in main.jsx for grid system only */
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}

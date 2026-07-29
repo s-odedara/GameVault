@@ -1,0 +1,22 @@
+Django==6.0.7
+djangorestframework==3.17.1
+django-cors-headers==4.9.0
+python-decouple==3.8
+requests==2.34.2
+Pillow==12.3.0
+
+# 🔥 Deployment ke liye zaroori (pehle project me nahi the)
+gunicorn==23.0.0
+whitenoise==6.12.0
+dj-database-url==2.3.0
+psycopg2-binary==2.9.10
+
+# 🔥 Marketplace payment gateway
+razorpay==1.4.2
+
+# 🔥 Optional: sirf zaroori hai agar production mein REDIS_URL set karte ho
+# (multi-worker rate limiting ke liye). Local dev ke liye zaroori nahi.
+django-redis==5.4.0
+
+# 🔥 Twilio for OTP verification
+twilio==9.10.9
