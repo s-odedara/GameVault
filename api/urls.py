@@ -10,6 +10,7 @@ from .views import (
     UpvotePostView,
     RawgProxyView,
     GamingNewsView,
+    CreateRentalOrderView, UpdateRentalStatusView, MyRentalsView, MyLentItemsView,
 )
 
 router = DefaultRouter()
@@ -38,6 +39,12 @@ urlpatterns = [
     path('marketplace/my-orders/',                 MyOrdersView.as_view(),            name='marketplace-my-orders'),
     path('marketplace/my-sales/',                  MySalesView.as_view(),             name='marketplace-my-sales'),
     path('marketplace/orders/<int:order_id>/update-status/', UpdateOrderStatusView.as_view(), name='marketplace-update-order-status'),
+
+    # ── Rentals ──────────────────────────────────────────────
+    path('rentals/checkout/<int:listing_id>/',     CreateRentalOrderView.as_view(),   name='rentals-checkout'),
+    path('rentals/orders/<int:order_id>/update-status/', UpdateRentalStatusView.as_view(), name='rentals-update-status'),
+    path('rentals/my-rentals/',                    MyRentalsView.as_view(),           name='rentals-my-rentals'),
+    path('rentals/my-lent-items/',                 MyLentItemsView.as_view(),         name='rentals-my-lent-items'),
 
     # ── RAWG proxy ───────────────────────────────────────────
     path('rawg/<path:endpoint>', RawgProxyView.as_view(), name='rawg-proxy'),

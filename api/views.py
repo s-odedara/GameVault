@@ -573,6 +573,125 @@ class MySalesView(generics.ListAPIView):
         return ctx
 
 
+from .models import RentalOrder
+from .serializers import RentalOrderSerializer
+
+class CreateRentalOrderView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, listing_id):
+        listing = get_object_or_404(RentalListing, pk=listing_id, status='Available')
+        if listing.owner_id == request.user.id:
+            return Response({"error": "You cannot rent your own item!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Basic checkout details
+        phone_number = request.data.get('phone_number')
+        email = request.data.get('email')
+        street_address = request.data.get('street_address')
+        city = request.data.get('city')
+        state = request.data.get('state')
+        zip_code = request.data.get('zip_code')
+
+        if not phone_number:
+            return Response({"error": "Phone number is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        order = RentalOrder.objects.create(
+            listing=listing,
+            renter=request.user,
+            owner=listing.owner,
+            total_amount=listing.rental_charges,
+            security_deposit=listing.security_deposit,
+            phone_number=phone_number,
+            email=email,
+            street_address=street_address,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            status='Requested',
+        )
+        listing.status = 'Rented'
+        listing.save(update_fields=['status'])
+
+        return Response({
+            "success": True,
+            "order_id": order.id,
+            "message": "Rental request sent successfully! 🎉"
+        }, status=status.HTTP_201_CREATED)
+
+
+class UpdateRentalStatusView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, order_id):
+        new_status = request.data.get('status')
+        try:
+            order = RentalOrder.objects.get(pk=order_id)
+        except RentalOrder.DoesNotExist:
+            return Response({"error": "Rental order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        is_owner = order.owner_id == request.user.id
+        is_renter = order.renter_id == request.user.id
+
+        if not is_owner and not is_renter:
+            return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        valid_transitions = {
+            'owner': {
+                'Requested': 'Handed Over',
+                'Return Initiated': 'Returned & Verified'
+            },
+            'renter': {
+                'Handed Over': 'In Use',
+                'In Use': 'Return Initiated'
+            }
+        }
+
+        role = 'owner' if is_owner else 'renter'
+        allowed_next = valid_transitions[role].get(order.status)
+
+        if new_status != allowed_next:
+            return Response(
+                {"error": f"Cannot transition from '{order.status}' to '{new_status}' as {role}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        order.status = new_status
+        order.save(update_fields=['status'])
+        
+        # Free up the listing if it's completely returned
+        if new_status == 'Returned & Verified':
+            order.listing.status = 'Available'
+            order.listing.save(update_fields=['status'])
+
+        return Response(RentalOrderSerializer(order, context={'request': request}).data)
+
+
+class MyRentalsView(generics.ListAPIView):
+    serializer_class = RentalOrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return RentalOrder.objects.filter(renter=self.request.user).order_by('-created_at')
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['request'] = self.request
+        return ctx
+
+
+class MyLentItemsView(generics.ListAPIView):
+    serializer_class = RentalOrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return RentalOrder.objects.filter(owner=self.request.user).order_by('-created_at')
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['request'] = self.request
+        return ctx
+
+
 # ======================================================================
 # RAWG API PROXY — key never exposed to frontend
 # ======================================================================

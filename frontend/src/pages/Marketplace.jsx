@@ -48,9 +48,9 @@ function ListingCard({ item, navigate }) {
         <button
           className="btn-gv-primary btn-bounce"
           style={{ width: '100%', marginTop: 10, padding: '7px 0', fontSize: '0.8rem' }}
-          onClick={e => { e.stopPropagation(); navigate(`/marketplace/listing/${item.id}`); }}
+          onClick={e => { e.stopPropagation(); navigate(`/marketplace/listing/${item.id}?type=${item.isRental ? 'rent' : 'buy'}`); }}
         >
-          View & Buy
+          {item.isRental ? 'View & Rent' : 'View & Buy'}
         </button>
       </div>
     </div>
@@ -58,6 +58,7 @@ function ListingCard({ item, navigate }) {
 }
 
 function Marketplace() {
+  const [mode, setMode]         = useState('buy'); // 'buy' or 'rent'
   const [listings, setListings] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
@@ -66,12 +67,18 @@ function Marketplace() {
   const token    = localStorage.getItem('token');
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/listings/`)
+    setLoading(true);
+    const endpoint = mode === 'buy' ? `${API_BASE_URL}/listings/` : `${API_BASE_URL}/rentals/`;
+    fetch(endpoint)
       .then(r => r.json())
-      .then(data => { setListings(Array.isArray(data) ? data : []); setLoading(false);
-                      setTimeout(() => window.AOS?.refresh(), 100); })
+      .then(data => { 
+          const mappedData = Array.isArray(data) ? data.map(d => ({...d, isRental: mode === 'rent'})) : [];
+          setListings(mappedData); 
+          setLoading(false);
+          setTimeout(() => window.AOS?.refresh(), 100); 
+      })
       .catch(() => setLoading(false));
-  }, []);
+  }, [mode]);
 
   const categories = ['All', 'Physical Game', 'Console', 'Controller/Peripheral', 'Merchandise', 'Collectible', 'Other'];
 
@@ -121,6 +128,10 @@ function Marketplace() {
 
       {/* ── Filters ── */}
       <div data-aos="fade-up" style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 4, marginRight: 16 }}>
+          <button onClick={() => setMode('buy')} className={mode === 'buy' ? 'btn-gv-primary btn-bounce' : 'btn-gv-ghost btn-bounce'} style={{ padding: '8px 20px' }}>Buy/Sell</button>
+          <button onClick={() => setMode('rent')} className={mode === 'rent' ? 'btn-gv-primary btn-bounce' : 'btn-gv-ghost btn-bounce'} style={{ padding: '8px 20px' }}>Rentals</button>
+        </div>
         <input
           type="text"
           className="gv-form-input"

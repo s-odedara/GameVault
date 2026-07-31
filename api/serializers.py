@@ -334,3 +334,26 @@ class OrderSerializer(serializers.ModelSerializer):
             if request:
                 return request.build_absolute_uri(listing.image.url)
         return None
+
+
+class RentalOrderSerializer(serializers.ModelSerializer):
+    listing_title  = serializers.ReadOnlyField(source='listing.title')
+    listing_image  = serializers.SerializerMethodField()
+    renter_username = serializers.ReadOnlyField(source='renter.username')
+    owner_username = serializers.ReadOnlyField(source='owner.username')
+
+    class Meta:
+        from .models import RentalOrder
+        model = RentalOrder
+        fields = '__all__'
+        read_only_fields = [
+            'renter', 'owner', 'status', 'created_at', 'updated_at'
+        ]
+
+    def get_listing_image(self, obj):
+        listing = obj.listing
+        if listing.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(listing.image.url)
+        return None

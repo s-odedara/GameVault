@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { API_BASE_URL, SERVER_BASE_URL } from '../utils/constants';
 import GVSpinner from '../components/GVSpinner';
@@ -72,6 +72,98 @@ function OTPTimer({ startedAt, onExpire }) {
     </div>
   );
 }
+
+// ─── Rent Checkout Modal ────────────────────────────────────────────────────────
+function RentalCheckoutModal({ listing, onClose, onSuccess }) {
+  const token = localStorage.getItem('token');
+  const [step, setStep] = useState(1);
+  const [busy, setBusy] = useState(false);
+
+  const [form, setForm] = useState({
+    phone_number: '', email: '', street_address: '', city: '', state: '', zip_code: ''
+  });
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const handlePlaceOrder = async () => {
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => {
+        if (v) fd.append(k, v);
+      });
+      const res = await fetch(`${API_BASE_URL}/rentals/checkout/${listing.id}/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Token ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Rental request failed');
+      toast.success(data.message || '🎉 Rental request sent successfully!');
+      onSuccess();
+    } catch (err) { toast.error(err.message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="checkout-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="checkout-modal" style={{ maxWidth: 500, width: '95%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.15rem' }}>🎮 Rent Item</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{listing.title}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.3rem', color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        {step === 1 && (
+          <div>
+            <div className="checkout-label" style={{ marginBottom: 12 }}>Contact Details</div>
+            <div style={{ marginBottom: 12 }}><label className="checkout-label">Phone *</label><input className="checkout-input" value={form.phone_number} onChange={e => set('phone_number', e.target.value)} /></div>
+            <div style={{ marginBottom: 12 }}><label className="checkout-label">Email *</label><input type="email" className="checkout-input" value={form.email} onChange={e => set('email', e.target.value)} /></div>
+            <button className="btn-gv-primary btn-bounce" style={{ width: '100%', padding: 12 }} disabled={!form.phone_number || !form.email} onClick={() => setStep(2)}>Continue →</button>
+          </div>
+        )}
+        {step === 2 && (
+          <div>
+            <div className="checkout-label" style={{ marginBottom: 12 }}>Delivery Address</div>
+            <div style={{ marginBottom: 12 }}><label className="checkout-label">Street Address *</label><input className="checkout-input" value={form.street_address} onChange={e => set('street_address', e.target.value)} /></div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ flex: 1, marginBottom: 12 }}><label className="checkout-label">City *</label><input className="checkout-input" value={form.city} onChange={e => set('city', e.target.value)} /></div>
+              <div style={{ flex: 1, marginBottom: 12 }}><label className="checkout-label">State *</label><input className="checkout-input" value={form.state} onChange={e => set('state', e.target.value)} /></div>
+              <div style={{ flex: 1, marginBottom: 12 }}><label className="checkout-label">ZIP *</label><input className="checkout-input" value={form.zip_code} onChange={e => set('zip_code', e.target.value)} /></div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-gv-ghost btn-bounce" style={{ flex: 1, padding: 11 }} onClick={() => setStep(1)}>← Back</button>
+              <button className="btn-gv-primary btn-bounce" style={{ flex: 2, padding: 11 }} disabled={!form.street_address || !form.city || !form.state || !form.zip_code} onClick={() => setStep(3)}>Continue →</button>
+            </div>
+          </div>
+        )}
+        {step === 3 && (
+          <div>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <h4 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>Confirm Request</h4>
+            </div>
+            <div className="glass-card" style={{ padding: '14px 16px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.82rem' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Rent per week</span>
+                <span style={{ color: 'var(--text-primary)' }}>₹{listing.rental_charges}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.82rem' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Security Deposit</span>
+                <span style={{ color: 'var(--text-primary)' }}>₹{listing.security_deposit}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-gv-ghost btn-bounce" style={{ flex: 1, padding: 11 }} onClick={() => setStep(2)}>← Back</button>
+              <button className="btn-gv-primary btn-bounce" style={{ flex: 2, padding: 12 }} disabled={busy} onClick={handlePlaceOrder}>{busy ? '⏳ Processing…' : '✅ Request Rental'}</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 // ─── Checkout Modal ───────────────────────────────────────────────────────────
 // 5 steps: 1=Payment Method, 2=Contact+OTP, 3=Shipping, 4=ID Verify, 5=Confirm
@@ -444,6 +536,7 @@ function CheckoutModal({ listing, onClose, onSuccess }) {
 // ─── Main ListingDetail Page ──────────────────────────────────────────────────
 function ListingDetail() {
   const { id }       = useParams();
+  const location     = useLocation();
   const navigate     = useNavigate();
   const token        = localStorage.getItem('token');
   const [listing, setListing]   = useState(null);
@@ -451,12 +544,17 @@ function ListingDetail() {
   const [showModal, setShowModal]= useState(false);
   const [orderDone, setOrderDone]= useState(false);
 
+  const queryParams = new URLSearchParams(location.search);
+  const type = queryParams.get('type') || 'buy';
+  const isRent = type === 'rent';
+
   useEffect(() => {
-    fetch(`${API_BASE_URL}/listings/${id}/`)
+    const endpoint = isRent ? `${API_BASE_URL}/rentals/${id}/` : `${API_BASE_URL}/listings/${id}/`;
+    fetch(endpoint)
       .then(r => r.json())
       .then(d => { setListing(d); setLoading(false); setTimeout(() => window.AOS?.refresh(), 100); })
       .catch(() => setLoading(false));
-  }, [id]);
+  }, [id, isRent]);
 
   const img = listing?.image
     ? (listing.image.startsWith('http') ? listing.image : `${SERVER_BASE_URL}${listing.image}`)
@@ -483,7 +581,7 @@ function ListingDetail() {
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <span className={`gv-badge ${conditionCls[listing.condition] || 'gv-badge-dark'}`}>{listing.condition}</span>
             <span className="gv-badge gv-badge-dark">{listing.category}</span>
-            <span className={`gv-badge ${listing.status === 'Active' ? 'gv-badge-green' : 'gv-badge-amber'}`}>
+            <span className={`gv-badge ${listing.status === 'Active' || listing.status === 'Available' ? 'gv-badge-green' : 'gv-badge-amber'}`}>
               {listing.status}
             </span>
           </div>
@@ -496,8 +594,15 @@ function ListingDetail() {
           </h1>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 900,
                         color: 'var(--accent-glow)', textShadow: '0 0 16px rgba(0,212,255,0.4)', marginBottom: 16 }}>
-            ₹{listing.price}
+            ₹{isRent ? listing.rental_charges : listing.price}
+            {isRent && <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> / week</span>}
           </div>
+          
+          {isRent && (
+            <div style={{ fontSize: '1rem', color: 'var(--accent-primary)', marginBottom: 16 }}>
+              Security Deposit: ₹{listing.security_deposit}
+            </div>
+          )}
 
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 20 }}>
             {listing.description}
@@ -505,7 +610,7 @@ function ListingDetail() {
 
           <div className="glass-card" style={{ padding: '12px 16px', marginBottom: 20 }}>
             {[
-              ['Seller', `@${listing.seller_username}`],
+              [isRent ? 'Owner' : 'Seller', `@${listing.owner_username || listing.seller_username}`],
               ['Location', listing.location || 'Not specified'],
               ['Listed on', new Date(listing.created_at).toLocaleDateString('en-IN')],
             ].map(([k, v]) => (
@@ -521,14 +626,14 @@ function ListingDetail() {
             <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)',
                           borderRadius: 'var(--radius-md)', padding: '16px 20px', textAlign: 'center' }}>
               <div style={{ fontSize: '1.8rem', marginBottom: 6 }}>🎉</div>
-              <h5 style={{ fontFamily: 'var(--font-display)', color: '#22c55e' }}>Order Placed!</h5>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Check My Orders for delivery updates.</p>
+              <h5 style={{ fontFamily: 'var(--font-display)', color: '#22c55e' }}>Request Sent!</h5>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Check My Dashboard for updates.</p>
               <button className="btn-gv-ghost btn-bounce" style={{ marginTop: 10, padding: '8px 20px' }}
                       onClick={() => navigate('/marketplace/orders')}>
-                View My Orders
+                View My Dashboard
               </button>
             </div>
-          ) : listing.status !== 'Active' ? (
+          ) : (listing.status !== 'Active' && listing.status !== 'Available') ? (
             <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
                           borderRadius: 'var(--radius-md)', padding: '14px 18px', textAlign: 'center', fontSize: '0.9rem' }}>
               This listing is no longer available.
@@ -536,24 +641,32 @@ function ListingDetail() {
           ) : !token ? (
             <button className="btn-gv-primary btn-bounce" style={{ width: '100%', padding: 14, fontSize: '1rem' }}
                     onClick={() => navigate('/login')}>
-              Login to Buy
+              Login to {isRent ? 'Rent' : 'Buy'}
             </button>
           ) : (
             <button className="btn-gv-primary btn-bounce" style={{ width: '100%', padding: 14, fontSize: '1rem',
                              fontFamily: 'var(--font-display)', fontWeight: 700 }}
                     onClick={() => setShowModal(true)}>
-              🛒 Buy Now
+              🛒 {isRent ? 'Request Rental' : 'Buy Now'}
             </button>
           )}
         </div>
       </div>
 
       {showModal && (
-        <CheckoutModal
-          listing={listing}
-          onClose={() => setShowModal(false)}
-          onSuccess={() => { setShowModal(false); setOrderDone(true); }}
-        />
+        isRent ? (
+          <RentalCheckoutModal
+            listing={listing}
+            onClose={() => setShowModal(false)}
+            onSuccess={() => { setShowModal(false); setOrderDone(true); }}
+          />
+        ) : (
+          <CheckoutModal
+            listing={listing}
+            onClose={() => setShowModal(false)}
+            onSuccess={() => { setShowModal(false); setOrderDone(true); }}
+          />
+        )
       )}
     </div>
   );

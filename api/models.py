@@ -245,3 +245,37 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} — {self.listing.title} [{self.payment_method}] — {self.status}"
+
+
+class RentalOrder(models.Model):
+    STATUS_CHOICES = [
+        ('Requested', 'Requested'),
+        ('Handed Over', 'Handed Over'),
+        ('In Use', 'In Use'),
+        ('Return Initiated', 'Return Initiated'),
+        ('Returned & Verified', 'Returned & Verified'),
+    ]
+
+    listing = models.ForeignKey(RentalListing, related_name='rental_orders', on_delete=models.CASCADE)
+    renter = models.ForeignKey(User, related_name='rentals', on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, related_name='lent_items', on_delete=models.CASCADE)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    security_deposit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    # Renter Contact Details
+    phone_number = models.CharField(max_length=10, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    street_address = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    zip_code = models.CharField(max_length=20, blank=True, null=True)
+
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Requested')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"RentalOrder #{self.id} — {self.listing.title} [{self.status}]"
