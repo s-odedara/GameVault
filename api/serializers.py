@@ -181,26 +181,24 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class ListingSerializer(serializers.ModelSerializer):
     seller_username = serializers.ReadOnlyField(source='seller.username')
-    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Listing
         fields = '__all__'
         read_only_fields = ['seller', 'status']
 
-    def get_image(self, obj):
-        """Always return the full absolute URL for the listing image.
-        Cloudinary storage returns https://res.cloudinary.com/... URLs directly.
-        Local storage needs request.build_absolute_uri()."""
-        if not obj.image:
-            return None
-        url = obj.image.url
-        if url.startswith('http'):
-            return url  # Cloudinary or any absolute URL
-        request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(url)
-        return url
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.image:
+            url = instance.image.url
+            if not url.startswith('http'):
+                request = self.context.get('request')
+                if request:
+                    url = request.build_absolute_uri(url)
+            ret['image'] = url
+        else:
+            ret['image'] = None
+        return ret
 
     def validate_title(self, value):
         value = reject_blank(value, "Title")
@@ -241,23 +239,24 @@ class ListingSerializer(serializers.ModelSerializer):
 # ── Rental Listing ─────────────────────────────────────────────────────────────
 class RentalListingSerializer(serializers.ModelSerializer):
     owner_username = serializers.ReadOnlyField(source='owner.username')
-    image = serializers.SerializerMethodField()
 
     class Meta:
         model = RentalListing
         fields = '__all__'
         read_only_fields = ['owner', 'status']
 
-    def get_image(self, obj):
-        if not obj.image:
-            return None
-        url = obj.image.url
-        if url.startswith('http'):
-            return url
-        request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(url)
-        return url
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.image:
+            url = instance.image.url
+            if not url.startswith('http'):
+                request = self.context.get('request')
+                if request:
+                    url = request.build_absolute_uri(url)
+            ret['image'] = url
+        else:
+            ret['image'] = None
+        return ret
 
     def validate_rental_period(self, value):
         allowed = [7, 14, 30]

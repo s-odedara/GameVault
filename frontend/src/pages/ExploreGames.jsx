@@ -112,8 +112,8 @@ function ExploreGames() {
     setLoading(true);
     try {
       const url = search
-        ? `${API_BASE_URL}/rawg/games?search=${search}&page_size=20`
-        : `${API_BASE_URL}/rawg/games?page_size=20&ordering=-added`;
+        ? `${API_BASE_URL}/rawg/games?search=${search}&page_size=40`
+        : `${API_BASE_URL}/rawg/games?page_size=40&ordering=-rating&metacritic=80,100`;
       const res  = await fetch(url);
       const data = await res.json();
       setGlobalGames(data.results || []);
@@ -168,10 +168,9 @@ function ExploreGames() {
         </form>
       </div>
 
-      {/* Games Grid */}
       {loading ? (
         <div className="row g-4">
-          {[...Array(12)].map((_, i) => (
+          {[...Array(24)].map((_, i) => (
             <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6" key={i}>
               <div className="skeleton-card" style={{ height: 280 }} />
             </div>
