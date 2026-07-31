@@ -153,7 +153,7 @@ function Navbar({ onToggleSidebar }) {
 
       <UniversalSearch />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <div className="d-none d-lg-flex" style={{ alignItems: 'center', gap: 4 }}>
         {navLinks.map(({ to, label }) => (
           <Link
             key={to}
@@ -209,7 +209,7 @@ function Layout({ sidebarOpen, setSidebarOpen }) {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <RawgSidebar transparent={isDetailPage} isOpen={sidebarOpen} />
+      <RawgSidebar transparent={isDetailPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {/* gv-main-content class applies margin-left: var(--sidebar-width) */}
       <div className="gv-main-content" style={{ flex: 1, overflowX: 'hidden' }}>
         <Routes>
