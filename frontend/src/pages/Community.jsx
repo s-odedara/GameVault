@@ -99,52 +99,51 @@ function GamingNewsPanel() {
   }, []);
 
   if (error) return (
-    <div className="glass-card" style={{ padding: '18px', marginTop: 16 }}>
+    <div className="glass-card" style={{ padding: '18px', marginBottom: 24 }}>
       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>📰 {error}</div>
     </div>
   );
 
   return (
-    <div className="glass-card" style={{ padding: '18px 18px', marginTop: 16 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.82rem',
-                    textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--accent-primary)',
-                    marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-        📰 Gaming News
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.2rem',
+                    color: 'var(--accent-glow)', textTransform: 'uppercase', letterSpacing: '1px',
+                    marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: '1.4rem' }}>📰</span> Trending Gaming News
       </div>
-      {loading ? <GVSpinner size="sm" label="" center={false} /> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {articles.slice(0, 8).map((a, i) => (
-            <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
-               style={{ textDecoration: 'none', display: 'flex', gap: 10,
-                        padding: '8px', borderRadius: 'var(--radius-md)',
-                        transition: 'background var(--transition-fast)' }}
-               onMouseEnter={e => e.currentTarget.style.background = 'rgba(67,97,238,0.1)'}
-               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <img src={a.image} alt="" style={{ width: 64, height: 44, objectFit: 'cover',
-                         borderRadius: 6, flexShrink: 0, background: 'var(--bg-elevated)' }}
-                   onError={e => { e.target.style.display = 'none'; }} />
-              <div style={{ overflow: 'hidden', flex: 1 }}>
-                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)',
-                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden', lineHeight: 1.35 }}>
-                  {a.title}
+      
+      {loading ? <GVSpinner size="md" label="Loading latest news..." center={true} /> : (
+        <div className="row g-4">
+          {articles.slice(0, 4).map((a, i) => (
+            <div className="col-12 col-md-6 col-xl-3" key={i}>
+              <a href={a.url} target="_blank" rel="noopener noreferrer" className="gv-card"
+                 style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', height: '100%',
+                          background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ position: 'relative', overflow: 'hidden' }}>
+                  <img src={a.image} alt="" style={{ width: '100%', height: 160, objectFit: 'cover',
+                             borderBottom: '1px solid var(--border-subtle)' }}
+                       onError={e => { e.target.style.display = 'none'; }} />
                 </div>
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 3,
-                              display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="gv-badge gv-badge-dark" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>
-                    {a.source}
-                  </span>
-                  <span>{new Date(a.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)',
+                                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden', lineHeight: 1.45, marginBottom: 12 }}>
+                    {a.title}
+                  </div>
+                  <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span className="gv-badge gv-badge-cyan" style={{ fontSize: '0.65rem' }}>
+                      {a.source}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                      {new Date(a.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </a>
+              </a>
+            </div>
           ))}
         </div>
       )}
-      <div className="divider" style={{ margin: '14px 0 10px' }} />
-      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-        Powered by <span style={{ color: 'var(--accent-primary)' }}>NewsAPI</span>
-      </div>
     </div>
   );
 }
@@ -274,6 +273,11 @@ function Community() {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* ── Full Width News Section ── */}
+          <div data-aos="fade-up">
+            <GamingNewsPanel />
           </div>
 
           {/* Composer */}
@@ -459,7 +463,6 @@ function Community() {
         {/* ── Trending Sidebar ── */}
         <div className="col-lg-4 d-none d-lg-block" data-aos="fade-left">
           <TrendingPanel />
-          <GamingNewsPanel />
         </div>
       </div>
     </div>

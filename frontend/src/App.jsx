@@ -116,7 +116,7 @@ function UniversalSearch() {
 }
 
 // ─── Navbar ───────────────────────────────────────────────
-function Navbar() {
+function Navbar({ onToggleSidebar }) {
   const token    = localStorage.getItem('token');
   const username = localStorage.getItem('username');
   const navigate = useNavigate();
@@ -138,9 +138,18 @@ function Navbar() {
 
   return (
     <nav className="gv-navbar" style={{ backgroundColor: 'rgba(11,15,26,0.9)' }}>
-      <Link to="/" className="gv-logo" style={{ textDecoration: 'none' }}>
-        GAME<span>VAULT</span>
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button 
+          className="gv-hamburger d-lg-none" 
+          onClick={onToggleSidebar}
+          style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.4rem', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        >
+          ☰
+        </button>
+        <Link to="/" className="gv-logo" style={{ textDecoration: 'none' }}>
+          GAME<span>VAULT</span>
+        </Link>
+      </div>
 
       <UniversalSearch />
 
@@ -187,14 +196,20 @@ function Navbar() {
 
 // ─── Layout with sidebar + main content ──────────────────
 // FIX 1.1: sidebar is position:fixed in CSS → main content has margin-left to compensate
-function Layout() {
+function Layout({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
   // FIX 1.2: transparent sidebar when viewing a game detail page
   const isDetailPage = /^\/(global-game|game)\//.test(location.pathname);
 
   return (
     <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 62px)' }}>
-      <RawgSidebar transparent={isDetailPage} />
+      {sidebarOpen && (
+        <div 
+          className="gv-sidebar-overlay d-lg-none" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <RawgSidebar transparent={isDetailPage} isOpen={sidebarOpen} />
       {/* gv-main-content class applies margin-left: var(--sidebar-width) */}
       <div className="gv-main-content" style={{ flex: 1, overflowX: 'hidden' }}>
         <Routes>
@@ -229,6 +244,8 @@ function Layout() {
 
 // ─── App ──────────────────────────────────────────────────
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   useEffect(() => {
     if (window.AOS) {
       window.AOS.init({ duration: 600, once: true, offset: 60 });
@@ -237,8 +254,8 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Navbar />
-      <Layout />
+      <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <Layout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <ToastContainer theme="dark" position="bottom-right" />
     </BrowserRouter>
   );

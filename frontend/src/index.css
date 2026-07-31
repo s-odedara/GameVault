@@ -994,7 +994,22 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
 
 /* ── Tablet: ≤1024px — hide sidebar, remove left margin ── */
 @media (max-width: 1024px) {
-  .gv-sidebar { display: none !important; }
+  .gv-sidebar {
+    transform: translateX(-100%);
+    background: var(--bg-surface) !important;
+    transition: transform var(--transition-normal);
+  }
+  .gv-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  .gv-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 199;
+  }
 
   .gv-main-content {
     margin-left: 0 !important;
@@ -1193,6 +1208,7 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
 .gv-main-content {
   margin-left: var(--sidebar-width) !important;
   min-height: calc(100vh - var(--header-height));
+  transition: margin-left var(--transition-normal);
 }
 
 /* ── 1.2 TRANSPARENT SIDEBAR on Game Detail pages ── */

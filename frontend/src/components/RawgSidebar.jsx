@@ -36,13 +36,13 @@ function SectionTitle({ children }) {
 // FIX 1.2: Accepts `transparent` prop from App.jsx Layout component
 // When true (on detail pages), the sidebar becomes transparent so the
 // game's background image shows through underneath.
-function RawgSidebar({ transparent = false }) {
+function RawgSidebar({ transparent = false, isOpen = false }) {
   const token    = localStorage.getItem('token');
   const username = localStorage.getItem('username');
   const letter   = username ? username.charAt(0).toUpperCase() : '?';
 
   return (
-    <aside className={`gv-sidebar d-none d-lg-flex flex-column${transparent ? ' transparent-mode' : ''}`}>
+    <aside className={`gv-sidebar d-flex flex-column${transparent ? ' transparent-mode' : ''}${isOpen ? ' open' : ''}`}>
 
       {/* ── User Profile Block ── */}
       <div className="gv-sidebar-user">
