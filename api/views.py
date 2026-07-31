@@ -641,9 +641,10 @@ class GamingNewsView(APIView):
             resp = http_requests.get(
                 'https://newsapi.org/v2/everything',
                 params={
-                    'q': 'video games OR gaming OR PlayStation OR Xbox OR Nintendo OR GTA OR esports',
+                    'q': 'video games OR gaming OR PlayStation OR Xbox OR Nintendo OR GTA',
+                    'domains': 'ign.com,polygon.com,gamespot.com,pcgamer.com,kotaku.com,gameinformer.com,nintendolife.com,pushsquare.com,destructoid.com',
                     'language': 'en',
-                    'sortBy': 'publishedAt',
+                    'sortBy': 'popularity',
                     'pageSize': 15,
                     'apiKey': api_key,
                 },
