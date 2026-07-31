@@ -81,6 +81,74 @@ function TrendingPanel() {
   );
 }
 
+// ── Gaming News Panel (NewsAPI) ─────────────────────────────────────────────
+function GamingNewsPanel() {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/gaming-news/`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.articles) setArticles(d.articles.filter(a => a.title && a.image));
+        else if (d.error) setError(d.error);
+        setLoading(false);
+      })
+      .catch(() => { setError('Could not load news.'); setLoading(false); });
+  }, []);
+
+  if (error) return (
+    <div className="glass-card" style={{ padding: '18px', marginTop: 16 }}>
+      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>📰 {error}</div>
+    </div>
+  );
+
+  return (
+    <div className="glass-card" style={{ padding: '18px 18px', marginTop: 16 }}>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.82rem',
+                    textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--accent-primary)',
+                    marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+        📰 Gaming News
+      </div>
+      {loading ? <GVSpinner size="sm" label="" center={false} /> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {articles.slice(0, 8).map((a, i) => (
+            <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
+               style={{ textDecoration: 'none', display: 'flex', gap: 10,
+                        padding: '8px', borderRadius: 'var(--radius-md)',
+                        transition: 'background var(--transition-fast)' }}
+               onMouseEnter={e => e.currentTarget.style.background = 'rgba(67,97,238,0.1)'}
+               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <img src={a.image} alt="" style={{ width: 64, height: 44, objectFit: 'cover',
+                         borderRadius: 6, flexShrink: 0, background: 'var(--bg-elevated)' }}
+                   onError={e => { e.target.style.display = 'none'; }} />
+              <div style={{ overflow: 'hidden', flex: 1 }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)',
+                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden', lineHeight: 1.35 }}>
+                  {a.title}
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 3,
+                              display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="gv-badge gv-badge-dark" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>
+                    {a.source}
+                  </span>
+                  <span>{new Date(a.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+      <div className="divider" style={{ margin: '14px 0 10px' }} />
+      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+        Powered by <span style={{ color: 'var(--accent-primary)' }}>NewsAPI</span>
+      </div>
+    </div>
+  );
+}
+
 // ── Community Page ──────────────────────────────────────────────────────────
 function Community() {
   const [posts, setPosts]           = useState([]);
@@ -391,6 +459,7 @@ function Community() {
         {/* ── Trending Sidebar ── */}
         <div className="col-lg-4 d-none d-lg-block" data-aos="fade-left">
           <TrendingPanel />
+          <GamingNewsPanel />
         </div>
       </div>
     </div>

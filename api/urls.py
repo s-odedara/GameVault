@@ -9,6 +9,7 @@ from .views import (
     SendOTPView, VerifyOTPView,
     UpvotePostView,
     RawgProxyView,
+    GamingNewsView,
 )
 
 router = DefaultRouter()
@@ -40,6 +41,9 @@ urlpatterns = [
 
     # ── RAWG proxy ───────────────────────────────────────────
     path('rawg/<path:endpoint>', RawgProxyView.as_view(), name='rawg-proxy'),
+
+    # ── Gaming News (NewsAPI proxy) ──────────────────────────
+    path('gaming-news/', GamingNewsView.as_view(), name='gaming-news'),
 
     path('', include(router.urls)),
 ]

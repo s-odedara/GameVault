@@ -612,3 +612,67 @@ class RawgProxyView(APIView):
             data = {"error": "Unexpected response from game database."}
 
         return Response(data, status=resp.status_code)
+
+
+# ======================================================================
+# GAMING NEWS — NewsAPI Proxy (key never exposed to frontend)
+# ======================================================================
+
+class GamingNewsView(APIView):
+    """
+    GET /api/gaming-news/
+    Fetches top gaming/video-game headlines from NewsAPI.
+    The NEWS_API_KEY is read from .env — never sent to the frontend.
+    Returns up to 15 articles with title, description, url, image, source, publishedAt.
+    """
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'anon'
+
+    def get(self, request):
+        api_key = settings.NEWS_API_KEY
+        if not api_key:
+            return Response(
+                {"error": "News service is not configured. Add NEWS_API_KEY to your .env."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            resp = http_requests.get(
+                'https://newsapi.org/v2/everything',
+                params={
+                    'q': 'video games OR gaming OR PlayStation OR Xbox OR Nintendo OR GTA OR esports',
+                    'language': 'en',
+                    'sortBy': 'publishedAt',
+                    'pageSize': 15,
+                    'apiKey': api_key,
+                },
+                timeout=10,
+            )
+            data = resp.json()
+        except http_requests.RequestException as e:
+            logger.error("NewsAPI request failed: %r", e, exc_info=True)
+            return Response(
+                {"error": "Couldn't fetch gaming news right now. Please try again."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        if data.get('status') != 'ok':
+            return Response(
+                {"error": data.get('message', 'NewsAPI returned an error.')},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        # Return a clean, frontend-friendly list
+        articles = []
+        for a in data.get('articles', []):
+            articles.append({
+                'title': a.get('title', ''),
+                'description': a.get('description', ''),
+                'url': a.get('url', ''),
+                'image': a.get('urlToImage', ''),
+                'source': a.get('source', {}).get('name', ''),
+                'published_at': a.get('publishedAt', ''),
+            })
+
+        return Response({"articles": articles}, status=status.HTTP_200_OK)

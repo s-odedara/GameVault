@@ -989,19 +989,128 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
 }
 
 /* -----------------------------------------------------------
-   📐 Responsive
+   📐 Responsive — COMPREHENSIVE MOBILE-FIRST
    ----------------------------------------------------------- */
+
+/* ── Tablet: ≤1024px — hide sidebar, remove left margin ── */
 @media (max-width: 1024px) {
-  .gv-sidebar { display: none; }
+  .gv-sidebar { display: none !important; }
+
+  .gv-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
 }
 
+/* ── Small Tablet: ≤768px — compact UI ── */
 @media (max-width: 768px) {
+  .gv-navbar {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+  }
+  .gv-logo {
+    font-size: 1rem !important;
+  }
+  .gv-search-wrap {
+    max-width: 160px !important;
+  }
+  .gv-search-input {
+    font-size: 0.78rem !important;
+    padding: 6px 10px 6px 30px !important;
+  }
+  .gv-nav-btn, .gv-nav-btn-primary {
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+  }
+  .gv-nav-username {
+    display: none !important;
+  }
+
+  /* Cards: 2 per row on tablets */
+  .row > [class*="col-lg-3"],
+  .row > [class*="col-xl-3"],
+  .row > [class*="col-lg-4"] {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+
+  /* Community sidebar hidden below lg already via d-none d-lg-block */
+
+  /* Detail page */
   .gv-detail-hero-content { padding: 24px 20px; }
   .gv-detail-title { font-size: 2rem; }
-  .checkout-modal { border-radius: var(--radius-lg); }
+  .checkout-modal {
+    border-radius: var(--radius-lg);
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
   .checkout-modal-header,
   .checkout-modal-body,
   .checkout-modal-footer { padding-left: 18px; padding-right: 18px; }
+
+  /* Glass cards: reduce padding */
+  .glass-card { padding: 14px 14px !important; }
+
+  /* Hero banners */
+  h1 { font-size: 1.5rem !important; }
+
+  /* Form rows: stack on smaller screens */
+  .row.g-3 > [class*="col-md-6"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ── Phone: ≤480px — single column, maximum compactness ── */
+@media (max-width: 480px) {
+  .gv-navbar {
+    flex-wrap: wrap !important;
+    padding: 6px 10px !important;
+  }
+  .gv-search-wrap {
+    order: 10;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    margin-top: 4px;
+  }
+  .gv-nav-btn, .gv-nav-btn-primary {
+    font-size: 0.65rem !important;
+    padding: 3px 6px !important;
+  }
+
+  /* Cards: 1 per row on phones */
+  .row > [class*="col-"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Main content padding */
+  .gv-main-content > div {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Marketplace filter chips: scroll horizontally */
+  .gv-main-content button {
+    font-size: 0.72rem !important;
+  }
+
+  /* OTP input boxes */
+  .otp-digit {
+    width: 36px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Checkout overlay */
+  .checkout-overlay {
+    align-items: flex-end !important;
+  }
+  .checkout-modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
 }
 
 /* -----------------------------------------------------------

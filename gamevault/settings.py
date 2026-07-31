@@ -254,4 +254,7 @@ TWILIO_API_KEY_SID    = config('TWILIO_API_KEY_SID', default='')
 TWILIO_API_KEY_SECRET = config('TWILIO_API_KEY_SECRET', default='')
 TWILIO_FROM_NUMBER    = config('TWILIO_FROM_NUMBER', default='')
 
+# ── NewsAPI (Trending Gaming News on Community Page) ─────────────────────────
+NEWS_API_KEY = config('NEWS_API_KEY', default='')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
