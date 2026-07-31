@@ -140,7 +140,7 @@ function Navbar({ onToggleSidebar }) {
     <nav className="gv-navbar" style={{ backgroundColor: 'rgba(11,15,26,0.9)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button 
-          className="gv-hamburger d-lg-none" 
+          className="gv-hamburger d-md-none" 
           onClick={onToggleSidebar}
           style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.4rem', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
         >
@@ -205,7 +205,7 @@ function Layout({ sidebarOpen, setSidebarOpen }) {
     <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 62px)' }}>
       {sidebarOpen && (
         <div 
-          className="gv-sidebar-overlay d-lg-none" 
+          className="gv-sidebar-overlay d-md-none" 
           onClick={() => setSidebarOpen(false)}
         />
       )}

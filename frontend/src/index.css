@@ -1205,8 +1205,8 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
    📐 Responsive — COMPREHENSIVE MOBILE-FIRST
    ----------------------------------------------------------- */
 
-/* ── Tablet: ≤1024px — hide sidebar, remove left margin ── */
-@media (max-width: 1024px) {
+/* 📱 Mobile & Small Tablet: < 768px — hide sidebar, remove left margin */
+@media (max-width: 767.98px) {
   .gv-sidebar {
     top: 0 !important;
     height: 100vh !important;
