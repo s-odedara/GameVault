@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const is_staff = localStorage.getItem('is_staff');
 
   useEffect(() => {
-    if (!token || !is_staff) {
+    if (!token || is_staff !== 'true') {
       toast.error('Access Denied. Admins only.');
       navigate('/');
       return;
@@ -62,6 +62,25 @@ export default function AdminDashboard() {
         fetchListings();
       } else {
         toast.error(`Failed to ${action} listing.`);
+      }
+    } catch (err) {
+      toast.error(`Error: ${err.message}`);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to deactivate/delete this user?')) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/`, {
+        method: 'DELETE',
+        headers: { Authorization: `Token ${token}` },
+      });
+      if (res.ok) {
+        toast.success('User deactivated successfully.');
+        setUsers(users.filter(u => u.id !== userId));
+      } else {
+        const errData = await res.json();
+        toast.error(`Failed to delete user: ${errData.error || 'Unknown error'}`);
       }
     } catch (err) {
       toast.error(`Error: ${err.message}`);
@@ -125,6 +144,7 @@ export default function AdminDashboard() {
                   <th style={{ padding: 8 }}>Email</th>
                   <th style={{ padding: 8 }}>Joined</th>
                   <th style={{ padding: 8 }}>Role</th>
+                  <th style={{ padding: 8, textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,6 +155,16 @@ export default function AdminDashboard() {
                     <td style={{ padding: 8 }}>{u.email}</td>
                     <td style={{ padding: 8 }}>{new Date(u.date_joined).toLocaleDateString()}</td>
                     <td style={{ padding: 8 }}>{u.is_staff ? 'Admin' : 'User'}</td>
+                    <td style={{ padding: 8, textAlign: 'right' }}>
+                      <button 
+                        onClick={() => handleDeleteUser(u.id)}
+                        className="btn-gv-ghost" 
+                        style={{ color: 'var(--accent-danger)', padding: '4px 8px', fontSize: '0.8rem' }}
+                        disabled={u.is_staff}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

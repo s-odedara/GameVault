@@ -268,7 +268,7 @@ class ListingViewSet(viewsets.ModelViewSet):
             if not self.request.user.is_authenticated:
                 return Listing.objects.none()
             return Listing.objects.filter(seller=self.request.user).order_by('-created_at')
-        return Listing.objects.filter(status='Active').order_by('-created_at')
+        return Listing.objects.filter(status='Active', is_approved=True).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
@@ -295,7 +295,7 @@ class RentalListingViewSet(viewsets.ModelViewSet):
             if not self.request.user.is_authenticated:
                 return RentalListing.objects.none()
             return RentalListing.objects.filter(owner=self.request.user).order_by('-created_at')
-        return RentalListing.objects.filter(status='Available').order_by('-created_at')
+        return RentalListing.objects.filter(status='Available', is_approved=True).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

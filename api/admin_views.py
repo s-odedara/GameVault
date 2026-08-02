@@ -26,7 +26,7 @@ class AdminUsersView(generics.GenericAPIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        users = User.objects.all().values('id', 'username', 'email', 'date_joined', 'is_staff')
+        users = User.objects.filter(is_active=True).values('id', 'username', 'email', 'date_joined', 'is_staff')
         return Response({"users": list(users)})
 
 class AdminListingsView(generics.GenericAPIView):
@@ -71,3 +71,17 @@ class AdminApproveListingView(generics.GenericAPIView):
             return Response({"error": "Invalid listing type"}, status=400)
             
         return Response({"success": True, "message": f"Listing {action}d successfully."})
+
+class AdminUserDeleteView(generics.GenericAPIView):
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, user_id):
+        try:
+            user_to_delete = User.objects.get(pk=user_id)
+            if user_to_delete.is_superuser:
+                return Response({" error\: \Cannot delete a superuser.\}, status=status.HTTP_400_BAD_REQUEST)
+ user_to_delete.is_active = False
+ user_to_delete.save(update_fields=['is_active'])
+ return Response({\success\: True, \message\: \User successfully deactivated.\});
+ except User.DoesNotExist:
+ return Response({\error\: \User not found.\}, status=status.HTTP_404_NOT_FOUND)
