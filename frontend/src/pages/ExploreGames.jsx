@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../utils/constants';
 
@@ -109,7 +109,7 @@ function ExploreGames() {
   const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
-  const fetchGlobalGames = async (search, pageNum = 1, isNewSearch = false) => {
+  const fetchGlobalGames = useCallback(async (search, pageNum = 1, isNewSearch = false) => {
     if (isNewSearch) {
       setLoading(true);
       setPage(1);
@@ -126,7 +126,6 @@ function ExploreGames() {
       
       const newResults = data.results || [];
       
-      // Rely on the API telling us if there's a next page, rather than hardcoded length
       if (data.next) {
         setHasMore(true);
       } else {
@@ -140,7 +139,7 @@ function ExploreGames() {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, []);
 
   const observer = useRef();
   const lastGameElementRef = useCallback(node => {
@@ -149,17 +148,13 @@ function ExploreGames() {
     
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => {
-          const next = prevPage + 1;
-          // We call fetchGlobalGames immediately with the updated page
-          fetchGlobalGames(searchTerm, next, false);
-          return next;
-        });
+        setPage(prevPage => prevPage + 1);
       }
     });
     
     if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore, searchTerm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, loadingMore, hasMore, searchTerm, fetchGlobalGames]);
 
   useEffect(() => { 
     fetchGlobalGames('', 1, true); 
