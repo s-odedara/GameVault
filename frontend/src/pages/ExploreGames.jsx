@@ -108,34 +108,29 @@ function ExploreGames() {
   const [hasMore, setHasMore]         = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
-  const observerTarget = useRef(null);
+
+  const observer = useRef();
+  const lastGameElementRef = useCallback(node => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => {
+          const next = prevPage + 1;
+          // We call fetchGlobalGames immediately with the updated page
+          fetchGlobalGames(searchTerm, next, false);
+          return next;
+        });
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore, searchTerm]);
 
   useEffect(() => { 
     fetchGlobalGames('', 1, true); 
   }, []);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
-          setPage(prev => {
-            const next = prev + 1;
-            fetchGlobalGames(searchTerm, next, false);
-            return next;
-          });
-        }
-      },
-      { threshold: 0.1 }
-    );
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
-    };
-  }, [hasMore, loading, loadingMore, searchTerm]);
 
   const fetchGlobalGames = async (search, pageNum = 1, isNewSearch = false) => {
     if (isNewSearch) {
@@ -153,10 +148,12 @@ function ExploreGames() {
       const data = await res.json();
       
       const newResults = data.results || [];
-      if (newResults.length < 40) {
-        setHasMore(false);
-      } else {
+      
+      // Rely on the API telling us if there's a next page, rather than hardcoded length
+      if (data.next) {
         setHasMore(true);
+      } else {
+        setHasMore(false);
       }
 
       setGlobalGames(prev => isNewSearch ? newResults : [...prev, ...newResults]);
@@ -169,14 +166,15 @@ function ExploreGames() {
   };
 
   useEffect(() => {
-    if (globalGames.length > 0) {
+    // Only refresh AOS for the initial load
+    if (globalGames.length > 0 && page === 1) {
       setTimeout(() => {
         if (window.AOS) {
           window.AOS.refreshHard();
         }
       }, 150);
     }
-  }, [globalGames]);
+  }, [globalGames, page]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -236,21 +234,38 @@ function ExploreGames() {
       ) : (
         <>
           <div className="row g-4">
-            {globalGames.map((game, idx) => (
-              <div
-                key={`${game.id}-${idx}`}
-                className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
-                data-aos="fade-up"
-                data-aos-delay={Math.min((idx % 40) * 30, 200)}
-              >
-                <ExploreCard game={game} navigate={navigate} />
-              </div>
-            ))}
+            {globalGames.map((game, idx) => {
+              const isLastElement = globalGames.length === idx + 1;
+              // Only apply AOS to the first page to prevent dynamically appended cards from getting stuck in opacity:0
+              const useAOS = idx < 40; 
+              
+              return (
+                <div
+                  ref={isLastElement ? lastGameElementRef : null}
+                  key={`${game.id}-${idx}`}
+                  className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
+                  data-aos={useAOS ? "fade-up" : undefined}
+                  data-aos-delay={useAOS ? Math.min((idx % 40) * 30, 200) : undefined}
+                  style={!useAOS ? { animation: 'fadeIn 0.5s ease-in-out' } : {}}
+                >
+                  <ExploreCard game={game} navigate={navigate} />
+                </div>
+              );
+            })}
           </div>
           
-          <div ref={observerTarget} style={{ height: '20px', marginTop: '20px', textAlign: 'center' }}>
-            {loadingMore && <div style={{ color: 'var(--text-muted)' }}>Loading more...</div>}
-            {!hasMore && globalGames.length > 0 && <div style={{ color: 'var(--text-muted)' }}>No more games to load</div>}
+          <div style={{ height: '40px', marginTop: '30px', textAlign: 'center', width: '100%' }}>
+            {loadingMore && (
+              <div style={{ color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Loading more games...
+              </div>
+            )}
+            {!hasMore && globalGames.length > 0 && (
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                End of results.
+              </div>
+            )}
           </div>
         </>
       )}
