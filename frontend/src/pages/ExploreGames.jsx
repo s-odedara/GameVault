@@ -109,29 +109,6 @@ function ExploreGames() {
   const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
-  const observer = useRef();
-  const lastGameElementRef = useCallback(node => {
-    if (loading || loadingMore) return;
-    if (observer.current) observer.current.disconnect();
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => {
-          const next = prevPage + 1;
-          // We call fetchGlobalGames immediately with the updated page
-          fetchGlobalGames(searchTerm, next, false);
-          return next;
-        });
-      }
-    });
-    
-    if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore, searchTerm]);
-
-  useEffect(() => { 
-    fetchGlobalGames('', 1, true); 
-  }, []);
-
   const fetchGlobalGames = async (search, pageNum = 1, isNewSearch = false) => {
     if (isNewSearch) {
       setLoading(true);
@@ -164,6 +141,29 @@ function ExploreGames() {
       setLoadingMore(false);
     }
   };
+
+  const observer = useRef();
+  const lastGameElementRef = useCallback(node => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => {
+          const next = prevPage + 1;
+          // We call fetchGlobalGames immediately with the updated page
+          fetchGlobalGames(searchTerm, next, false);
+          return next;
+        });
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore, searchTerm]);
+
+  useEffect(() => { 
+    fetchGlobalGames('', 1, true); 
+  }, []);
 
   useEffect(() => {
     // Only refresh AOS for the initial load
