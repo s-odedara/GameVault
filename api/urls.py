@@ -11,11 +11,12 @@ from .views import (
     RawgProxyView,
     GamingNewsView,
     CreateRentalOrderView, UpdateRentalStatusView, MyRentalsView, MyLentItemsView,
-    VerifyRentalPaymentView, VerifyHandoverOTPView, make_me_admin
+    VerifyRentalPaymentView, VerifyHandoverOTPView, make_me_admin, RaiseDisputeView
 )
 from .admin_views import (
     AdminDashboardStatsView, AdminUsersView,
-    AdminListingsView, AdminApproveListingView, AdminUserDeleteView
+    AdminListingsView, AdminApproveListingView, AdminUserDeleteView,
+    AdminEscrowOrdersView, AdminDisputesView, AdminResolveDisputeView
 )
 
 router = DefaultRouter()
@@ -57,6 +58,8 @@ urlpatterns = [
     # ── RAWG proxy ───────────────────────────────────────────
     path('rawg/<path:endpoint>', RawgProxyView.as_view(), name='rawg-proxy'),
 
+    path('disputes/raise/', RaiseDisputeView.as_view(), name='raise-dispute'),
+
     # ── Gaming News (NewsAPI proxy) ──────────────────────────
     path('gaming-news/', GamingNewsView.as_view(), name='gaming-news'),
 
@@ -69,6 +72,9 @@ urlpatterns = [
     path('admin/users/<int:user_id>/', AdminUserDeleteView.as_view(), name='admin-user-delete'),
     path('admin/listings/', AdminListingsView.as_view(), name='admin-listings'),
     path('admin/listings/<str:listing_type>/<int:listing_id>/approve/', AdminApproveListingView.as_view(), name='admin-approve-listing'),
+    path('admin/escrow/', AdminEscrowOrdersView.as_view(), name='admin-escrow'),
+    path('admin/disputes/', AdminDisputesView.as_view(), name='admin-disputes'),
+    path('admin/disputes/<int:dispute_id>/resolve/', AdminResolveDisputeView.as_view(), name='admin-resolve-dispute'),
 
     path('', include(router.urls)),
 ]

@@ -69,7 +69,7 @@ function RentalOrderStepper({ order }) {
 }
 
 // ── Buy/Sell Order Card ────────────────────────────────────
-function OrderCard({ order, mode, onUpdateStatus }) {
+function OrderCard({ order, mode, onUpdateStatus, onRaiseDispute }) {
   const [expanded, setExpanded] = useState(false);
   const statusStyle = {
     Pending:       'gv-badge-dark',
@@ -82,7 +82,6 @@ function OrderCard({ order, mode, onUpdateStatus }) {
   };
 
   const [otpInput, setOtpInput] = useState('');
-  const canMarkDelivered = mode === 'buyer' && order.status === 'Shipped';
   const canMarkShipped = mode === 'seller' && ['Paid', 'COD_Confirmed', 'Escrowed'].includes(order.status);
 
   return (
@@ -112,14 +111,14 @@ function OrderCard({ order, mode, onUpdateStatus }) {
         <OrderStepper order={order} />
       )}
 
-      {mode === 'buyer' && order.status === 'Escrowed' && (
+      {mode === 'buyer' && order.status === 'Shipped' && (
         <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--accent-glow)' }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Handover OTP to share with seller:</div>
           <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 2 }}>{order.handover_otp}</div>
         </div>
       )}
 
-      {mode === 'seller' && order.status === 'Escrowed' && (
+      {mode === 'seller' && order.status === 'Shipped' && (
         <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 8 }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>Enter Buyer's OTP to mark as Delivered:</div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -180,9 +179,10 @@ function OrderCard({ order, mode, onUpdateStatus }) {
               🚚 Mark as Shipped
             </button>
           )}
-          {canMarkDelivered && (
-            <button onClick={() => onUpdateStatus('buy', order.id, 'Delivered')} className="btn-gv-primary btn-bounce" style={{ marginTop: 14, padding: '8px 22px', fontSize: '0.82rem' }}>
-              🎉 Mark as Received / Delivered
+
+          {['Escrowed', 'Shipped'].includes(order.status) && (
+            <button onClick={() => onRaiseDispute('buy', order.id)} className="btn-gv-ghost" style={{ marginTop: 14, padding: '8px 22px', fontSize: '0.82rem', color: 'var(--accent-danger)', marginLeft: 8 }}>
+              ⚠️ Raise Dispute
             </button>
           )}
         </div>
@@ -192,7 +192,7 @@ function OrderCard({ order, mode, onUpdateStatus }) {
 }
 
 // ── Rent Order Card ────────────────────────────────────────
-function RentalOrderCard({ order, mode, onUpdateStatus }) {
+function RentalOrderCard({ order, mode, onUpdateStatus, onRaiseDispute }) {
   const [expanded, setExpanded] = useState(false);
   const statusStyle = {
     'Requested': 'gv-badge-amber',
@@ -296,6 +296,12 @@ function RentalOrderCard({ order, mode, onUpdateStatus }) {
                 ✅ Item Returned & Verified
               </button>
             )}
+
+            {['Escrowed', 'Handed Over', 'In Use'].includes(order.status) && (
+              <button onClick={() => onRaiseDispute('rent', order.id)} className="btn-gv-ghost" style={{ marginTop: 14, padding: '8px 22px', fontSize: '0.82rem', color: 'var(--accent-danger)' }}>
+                ⚠️ Raise Dispute
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -384,6 +390,26 @@ function MyOrders() {
     }
   };
 
+  const handleRaiseDispute = async (type, orderId) => {
+    const reason = window.prompt("Please briefly explain why you are raising a dispute for this item:");
+    if (!reason) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/disputes/raise/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+        body: JSON.stringify({ order_type: type === 'buy' ? 'sale' : 'rent', order_id: orderId, reason })
+      });
+      if (res.ok) {
+        toast.success("Dispute raised. Our team will review it shortly.");
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to raise dispute.");
+      }
+    } catch {
+      toast.error("Server error while raising dispute.");
+    }
+  };
+
   if (!token) return (
     <div style={{ textAlign: 'center', padding: '80px 20px' }}>
       <div style={{ fontSize: '3rem', marginBottom: 16 }}>🔐</div>
@@ -451,9 +477,9 @@ function MyOrders() {
       ) : (
         list.map(order => 
           type === 'buy' ? (
-            <OrderCard key={order.id} order={order} mode={mode} onUpdateStatus={handleUpdateStatus} />
+            <OrderCard key={order.id} order={order} mode={mode} onUpdateStatus={handleUpdateStatus} onRaiseDispute={handleRaiseDispute} />
           ) : (
-            <RentalOrderCard key={order.id} order={order} mode={mode} onUpdateStatus={handleUpdateStatus} />
+            <RentalOrderCard key={order.id} order={order} mode={mode} onUpdateStatus={handleUpdateStatus} onRaiseDispute={handleRaiseDispute} />
           )
         )
       )}

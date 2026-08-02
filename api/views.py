@@ -580,8 +580,8 @@ class UpdateOrderStatusView(generics.GenericAPIView):
         tracking_number = request.data.get('tracking_number', '')
 
         valid_transitions = {
-            'seller': {'Paid': 'Shipped', 'COD_Confirmed': 'Shipped'},
-            'buyer':  {'Shipped': 'Delivered'},
+            'seller': {'Paid': 'Shipped', 'COD_Confirmed': 'Shipped', 'Escrowed': 'Shipped'},
+            'buyer':  {},
         }
 
         try:
@@ -607,6 +607,13 @@ class UpdateOrderStatusView(generics.GenericAPIView):
         order.status = new_status
         if tracking_number:
             order.tracking_number = tracking_number
+
+        if new_status == 'Shipped':
+            if not order.handover_otp:
+                import random
+                order.handover_otp = str(random.randint(1000, 9999))
+            print(f"--- HANDOVER OTP FOR ORDER {order.id}: {order.handover_otp} ---", flush=True)
+
         order.save()
 
         return Response(OrderSerializer(order).data)
@@ -983,7 +990,7 @@ class VerifyHandoverOTPView(generics.GenericAPIView):
 
         if order_type == 'sale':
             order = get_object_or_404(Order, pk=order_id, seller=request.user)
-            if order.status != 'Escrowed':
+            if order.status != 'Shipped':
                 return Response({"error": f"Invalid order status for handover: {order.status}"}, status=status.HTTP_400_BAD_REQUEST)
             if order.handover_otp != otp:
                 return Response({"error": "Invalid OTP. Handover failed."}, status=status.HTTP_400_BAD_REQUEST)
@@ -1015,3 +1022,39 @@ def make_me_admin(request):
         return HttpResponse('Success! sagaradmin is now an admin. You can log in.')
     except Exception as e:
         return HttpResponse(f'Error: {e}')
+
+from .models import Dispute
+
+class RaiseDisputeView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get('order_id')
+        order_type = request.data.get('order_type')
+        reason = request.data.get('reason')
+
+        if not all([order_id, order_type, reason]):
+            return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Basic check to see if order exists
+        if order_type == 'sale':
+            try:
+                Order.objects.get(pk=order_id)
+            except Order.DoesNotExist:
+                return Response({"error": "Sale order not found."}, status=status.HTTP_404_NOT_FOUND)
+        elif order_type == 'rent':
+            try:
+                RentalOrder.objects.get(pk=order_id)
+            except RentalOrder.DoesNotExist:
+                return Response({"error": "Rental order not found."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error": "Invalid order type."}, status=status.HTTP_400_BAD_REQUEST)
+
+        Dispute.objects.create(
+            user=request.user,
+            order_id=order_id,
+            order_type=order_type,
+            reason=reason
+        )
+
+        return Response({"success": True, "message": "Dispute raised successfully. Admins will review it soon."})

@@ -8,6 +8,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ total_users: 0, total_escrowed_orders: 0, total_platform_fees: 0 });
   const [users, setUsers] = useState([]);
   const [listings, setListings] = useState({ marketplace: [], rentals: [] });
+  const [escrowedOrders, setEscrowedOrders] = useState({ sales: [], rentals: [] });
+  const [disputes, setDisputes] = useState([]);
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const is_staff = localStorage.getItem('is_staff');
@@ -21,6 +23,8 @@ export default function AdminDashboard() {
     fetchStats();
     fetchUsers();
     fetchListings();
+    fetchEscrowedOrders();
+    fetchDisputes();
   }, [navigate, token, is_staff]);
 
   const fetchStats = async () => {
@@ -45,6 +49,23 @@ export default function AdminDashboard() {
       const res = await fetch(`${API_BASE_URL}/admin/listings/`, { headers: { Authorization: `Token ${token}` } });
       if (res.ok) setListings(await res.json());
     } catch (err) { console.error('Failed to fetch listings'); }
+  };
+
+  const fetchEscrowedOrders = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/escrow/`, { headers: { Authorization: `Token ${token}` } });
+      if (res.ok) setEscrowedOrders(await res.json());
+    } catch (err) { console.error('Failed to fetch escrow orders'); }
+  };
+
+  const fetchDisputes = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/disputes/`, { headers: { Authorization: `Token ${token}` } });
+      if (res.ok) {
+        const data = await res.json();
+        setDisputes(data.disputes);
+      }
+    } catch (err) { console.error('Failed to fetch disputes'); }
   };
 
   const handleApprove = async (type, id, action) => {
@@ -81,6 +102,27 @@ export default function AdminDashboard() {
       } else {
         const errData = await res.json();
         toast.error(`Failed to delete user: ${errData.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      toast.error(`Error: ${err.message}`);
+    }
+  };
+
+  const handleResolveDispute = async (disputeId, action) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/disputes/${disputeId}/resolve/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${token}`
+        },
+        body: JSON.stringify({ status: action })
+      });
+      if (res.ok) {
+        toast.success(`Dispute marked as ${action}!`);
+        fetchDisputes();
+      } else {
+        toast.error('Failed to resolve dispute.');
       }
     } catch (err) {
       toast.error(`Error: ${err.message}`);
@@ -219,13 +261,93 @@ export default function AdminDashboard() {
             <h3 style={{ marginBottom: 16 }}>Escrow Management</h3>
             <p style={{ color: 'var(--text-muted)' }}>This section tracks all items currently held in escrow waiting for handover.</p>
             <p>Total items currently Escrowed: <strong>{stats.total_escrowed_orders}</strong></p>
+            
+            <h4 style={{ color: 'var(--accent-glow)', marginTop: 24 }}>Escrowed Sales</h4>
+            {escrowedOrders.sales.length === 0 ? <p>No escrowed sales.</p> : (
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', marginTop: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: 8 }}>Order ID</th>
+                    <th style={{ padding: 8 }}>Item</th>
+                    <th style={{ padding: 8 }}>Buyer</th>
+                    <th style={{ padding: 8 }}>Seller</th>
+                    <th style={{ padding: 8 }}>Amount (₹)</th>
+                    <th style={{ padding: 8 }}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {escrowedOrders.sales.map(o => (
+                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: 8 }}>{o.id}</td>
+                      <td style={{ padding: 8 }}>{o.listing__title}</td>
+                      <td style={{ padding: 8 }}>{o.buyer__username}</td>
+                      <td style={{ padding: 8 }}>{o.seller__username}</td>
+                      <td style={{ padding: 8 }}>{o.amount}</td>
+                      <td style={{ padding: 8 }}>{new Date(o.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            <h4 style={{ color: 'var(--accent-primary)', marginTop: 24 }}>Escrowed Rentals</h4>
+            {escrowedOrders.rentals.length === 0 ? <p>No escrowed rentals.</p> : (
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', marginTop: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: 8 }}>Order ID</th>
+                    <th style={{ padding: 8 }}>Item</th>
+                    <th style={{ padding: 8 }}>Renter</th>
+                    <th style={{ padding: 8 }}>Owner</th>
+                    <th style={{ padding: 8 }}>Amount (₹)</th>
+                    <th style={{ padding: 8 }}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {escrowedOrders.rentals.map(o => (
+                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: 8 }}>{o.id}</td>
+                      <td style={{ padding: 8 }}>{o.listing__title}</td>
+                      <td style={{ padding: 8 }}>{o.renter__username}</td>
+                      <td style={{ padding: 8 }}>{o.owner__username}</td>
+                      <td style={{ padding: 8 }}>{o.total_amount}</td>
+                      <td style={{ padding: 8 }}>{new Date(o.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
         {activeTab === 'disputes' && (
           <div>
             <h3 style={{ marginBottom: 16 }}>Disputes & Resolutions</h3>
-            <p style={{ color: 'var(--text-muted)' }}>No active disputes currently. Users can file disputes here if items are not handed over correctly.</p>
+            <p style={{ color: 'var(--text-muted)' }}>Users can file disputes here if items are not handed over correctly.</p>
+            {disputes.length === 0 ? <p>No active disputes currently.</p> : (
+              <div style={{ display: 'grid', gap: 12 }}>
+                {disputes.map(d => (
+                  <div key={d.id} style={{ padding: 16, background: 'var(--bg-elevated)', borderRadius: 8, borderLeft: d.status === 'Open' ? '4px solid var(--accent-danger)' : '4px solid var(--text-muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontWeight: 600 }}>Dispute #{d.id} - {d.status}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>By: {d.user__username} on {new Date(d.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: '0.9rem' }}>
+                      <strong>Order:</strong> {d.order_type.toUpperCase()} #{d.order_id}
+                    </div>
+                    <div style={{ marginTop: 4, padding: 8, background: 'var(--bg-default)', borderRadius: 4, fontSize: '0.85rem' }}>
+                      <strong>Reason:</strong> {d.reason}
+                    </div>
+                    {d.status === 'Open' && (
+                      <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                        <button onClick={() => handleResolveDispute(d.id, 'Resolved')} className="btn-gv-primary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>Mark Resolved</button>
+                        <button onClick={() => handleResolveDispute(d.id, 'Refunded')} className="btn-gv-ghost" style={{ padding: '6px 12px', fontSize: '0.8rem', color: 'var(--accent-glow)' }}>Issue Refund</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

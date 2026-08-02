@@ -314,3 +314,20 @@ class CachedRawgResponse(models.Model):
 
     def __str__(self):
         return f"Cache: {self.endpoint} ? {self.query_params}"
+
+class Dispute(models.Model):
+    STATUS_CHOICES = [
+        ('Open', 'Open'),
+        ('Resolved', 'Resolved'),
+        ('Refunded', 'Refunded'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='disputes')
+    order_id = models.IntegerField()
+    order_type = models.CharField(max_length=20) # 'sale' or 'rent'
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Dispute #{self.id} for {self.order_type} order #{self.order_id}"
