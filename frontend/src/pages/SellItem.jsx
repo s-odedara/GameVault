@@ -30,6 +30,9 @@ function SellItem() {
     if (!/^\d{10}$/.test(form.seller_contact.trim())) {
       toast.error('Contact number must be exactly 10 digits.'); return;
     }
+    if (!form.location.trim()) {
+      toast.error('Location is required.'); return;
+    }
     if (!form.image) { toast.error('A photo is required for all listings.'); return; }
     setIsSubmitting(true);
     const fd = new FormData();
@@ -97,9 +100,9 @@ function SellItem() {
                 value={form.price} onChange={e => set('price', e.target.value)} required disabled={isSubmitting} />
             </div>
             <div className="col-md-6">
-              <label className="gv-form-label">Location (optional)</label>
+              <label className="gv-form-label">Location *</label>
               <input type="text" className="gv-form-input" placeholder="e.g., Ahmedabad, Gujarat"
-                value={form.location} onChange={e => set('location', e.target.value)} disabled={isSubmitting} />
+                value={form.location} onChange={e => set('location', e.target.value)} required disabled={isSubmitting} />
             </div>
           </div>
 

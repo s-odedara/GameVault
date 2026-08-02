@@ -78,8 +78,14 @@ function Login() {
         localStorage.setItem('token', data.token)
         localStorage.setItem('username', data.username)
         localStorage.setItem('user_id', data.user_id)
-        toast.success(isLogin ? '🟢 Welcome back!' : '🚀 Account created!')
-        navigate('/')
+        if (data.is_staff) {
+          localStorage.setItem('is_staff', 'true')
+          toast.success('👑 Welcome, Admin!')
+          navigate('/admin-dashboard')
+        } else {
+          toast.success(isLogin ? '🟢 Welcome back!' : '🚀 Account created!')
+          navigate('/')
+        }
       }
     })
     .catch(err => toast.error(err.message))

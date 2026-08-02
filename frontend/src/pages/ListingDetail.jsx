@@ -98,8 +98,34 @@ function RentalCheckoutModal({ listing, onClose, onSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Rental request failed');
-      toast.success(data.message || '🎉 Rental request sent successfully!');
-      onSuccess();
+      
+      // ── Razorpay popup for Rentals ──
+      if (!window.Razorpay) { toast.error('Razorpay script not loaded.'); setBusy(false); return; }
+      const rzp = new window.Razorpay({
+        key:          data.key_id,
+        amount:       data.amount,
+        currency:     'INR',
+        name:         'GameVault Rentals',
+        description:  data.listing_title,
+        order_id:     data.razorpay_order_id,
+        prefill: { contact: form.phone_number, email: form.email },
+        theme: { color: '#4361ee' },
+        handler: async (resp) => {
+          await fetch(`${API_BASE_URL}/rentals/verify-payment/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+            body: JSON.stringify({
+              order_id: data.order_id,
+              razorpay_order_id:   resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature:  resp.razorpay_signature,
+            }),
+          });
+          toast.success('💳 Payment verified! Item Escrowed.');
+          onSuccess();
+        },
+      });
+      rzp.open();
     } catch (err) { toast.error(err.message); }
     finally { setBusy(false); }
   };
@@ -118,9 +144,19 @@ function RentalCheckoutModal({ listing, onClose, onSuccess }) {
         {step === 1 && (
           <div>
             <div className="checkout-label" style={{ marginBottom: 12 }}>Contact Details</div>
-            <div style={{ marginBottom: 12 }}><label className="checkout-label">Phone *</label><input className="checkout-input" value={form.phone_number} onChange={e => set('phone_number', e.target.value)} /></div>
-            <div style={{ marginBottom: 12 }}><label className="checkout-label">Email *</label><input type="email" className="checkout-input" value={form.email} onChange={e => set('email', e.target.value)} /></div>
-            <button className="btn-gv-primary btn-bounce" style={{ width: '100%', padding: 12 }} disabled={!form.phone_number || !form.email} onClick={() => setStep(2)}>Continue →</button>
+            <div style={{ marginBottom: 12 }}>
+              <label className="checkout-label">Phone (10 digits) *</label>
+              <input type="tel" className="checkout-input" placeholder="9876543210" maxLength={10} value={form.phone_number} onChange={e => set('phone_number', e.target.value.replace(/\D/g, '').slice(0, 10))} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="checkout-label">Email *</label>
+              <input type="email" className="checkout-input" placeholder="you@email.com" value={form.email} onChange={e => set('email', e.target.value)} />
+            </div>
+            <button className="btn-gv-primary btn-bounce" style={{ width: '100%', padding: 12 }} 
+                    disabled={!/^\d{10}$/.test(form.phone_number) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)} 
+                    onClick={() => setStep(2)}>
+              Continue →
+            </button>
           </div>
         )}
         {step === 2 && (
@@ -427,7 +463,7 @@ function CheckoutModal({ listing, onClose, onSuccess }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn-gv-ghost btn-bounce" style={{ flex: 1, padding: 11 }} onClick={() => setStep(1)}>← Back</button>
               <button className="btn-gv-primary btn-bounce" style={{ flex: 2, padding: 11 }}
-                      disabled={!otpVerified || !form.email}
+                      disabled={!otpVerified || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)}
                       onClick={() => setStep(3)}>
                 {!otpVerified ? '🔒 Verify Phone to Continue' : 'Continue →'}
               </button>
@@ -465,24 +501,31 @@ function CheckoutModal({ listing, onClose, onSuccess }) {
         {/* ── STEP 4: ID Verification ───────────────────────────────────── */}
         {step === 4 && (
           <div>
-            <div className="checkout-label" style={{ marginBottom: 6 }}>🪪 Identity Verification</div>
+            <div className="checkout-label" style={{ marginBottom: 6 }}>🪪 Identity Verification (PAN Card)</div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 14 }}>
-              Required for high-value transactions. Aadhaar, PAN, Driving License, or Passport accepted.
+              Required for high-value transactions. Only PAN Card is accepted.
             </p>
             <div style={{ marginBottom: 14 }}>
-              <label className="checkout-label">ID Number</label>
-              <input type="text" className="checkout-input" placeholder="XXXX XXXX XXXX"
-                     value={form.gov_id_number} onChange={e => set('gov_id_number', e.target.value)} />
+              <label className="checkout-label">PAN Number *</label>
+              <input type="text" className="checkout-input" placeholder="ABCDE1234F"
+                     value={form.gov_id_number} onChange={e => set('gov_id_number', e.target.value.toUpperCase())} />
+              {!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.gov_id_number) && form.gov_id_number.length > 0 && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--accent-glow)', marginTop: 4 }}>
+                  Invalid PAN format. Must be 5 letters, 4 digits, 1 letter.
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label className="checkout-label">Upload ID Document (optional)</label>
+              <label className="checkout-label">Upload PAN Document *</label>
               <input type="file" accept="image/*,.pdf" className="checkout-input"
                      style={{ padding: '8px 12px' }}
                      onChange={e => set('gov_id_doc', e.target.files[0])} />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn-gv-ghost btn-bounce" style={{ flex: 1, padding: 11 }} onClick={() => setStep(3)}>← Back</button>
-              <button className="btn-gv-primary btn-bounce" style={{ flex: 2, padding: 11 }} onClick={() => setStep(5)}>
+              <button className="btn-gv-primary btn-bounce" style={{ flex: 2, padding: 11 }} 
+                      disabled={!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.gov_id_number) || !form.gov_id_doc}
+                      onClick={() => setStep(5)}>
                 Continue →
               </button>
             </div>

@@ -67,7 +67,7 @@ function Profile() {
               </div>
               
               <h3 className="card-title text-warning fw-bold mb-1">{localStorage.getItem('username') || 'Player'}</h3>
-              <p className="text-muted mb-4">GameVault Pro Member</p>
+              <p className="text-muted mb-4">GameVault Member</p>
               
               <div className="row text-center mb-4">
                 <div className="col-6 border-end border-secondary">

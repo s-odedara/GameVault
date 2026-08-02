@@ -153,7 +153,7 @@ class LoginView(ObtainAuthToken):
 
         auth_throttle.record_success(ip, username)
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({"token": token.key, "user_id": user.id, "username": user.username})
+        return Response({"token": token.key, "user_id": user.id, "username": user.username, "is_staff": user.is_staff})
 
 class GoogleLoginView(generics.GenericAPIView):
     """POST /api/auth/google/"""
@@ -537,6 +537,8 @@ class VerifyPaymentView(generics.GenericAPIView):
         if order.status == 'Paid':
             return Response({"success": True, "message": "Already verified.", "order_id": order.id})
 
+        import random
+        from decimal import Decimal
         try:
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
             client.utility.verify_payment_signature({
@@ -549,14 +551,23 @@ class VerifyPaymentView(generics.GenericAPIView):
             order.save(update_fields=['status'])
             return Response({"error": "Payment verification failed — signature mismatch."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # ── Escrow & Commission Logic ──
+        base_amount = Decimal(str(order.amount))
+        platform_fee = base_amount * Decimal('0.05')
+        seller_earnings = base_amount - platform_fee
+
+        order.platform_fee = platform_fee
+        order.seller_earnings = seller_earnings
+        order.handover_otp = str(random.randint(1000, 9999))
         order.razorpay_payment_id = razorpay_payment_id
         order.razorpay_signature  = razorpay_signature
-        order.status = 'Paid'
+        order.status = 'Escrowed'
         order.save()
+        
         order.listing.status = 'Sold'
         order.listing.save(update_fields=['status'])
 
-        return Response({"success": True, "message": "Payment verified! 🎉", "order_id": order.id})
+        return Response({"success": True, "message": "Payment verified & Escrowed! 🎉", "order_id": order.id})
 
 
 class UpdateOrderStatusView(generics.GenericAPIView):
@@ -650,11 +661,37 @@ class CreateRentalOrderView(generics.GenericAPIView):
         if not phone_number:
             return Response({"error": "Phone number is required."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # ── RAZORPAY INTEGRATION FOR RENTALS ──
+        if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
+            return Response(
+                {"error": "Payment gateway not configured. Add RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET to .env."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        # Total amount = Rental Charges + 599 (Security Deposit) as per requirement
+        total_payable = listing.rental_charges + listing.security_deposit
+        amount_paise = int(total_payable * 100)
+
+        import razorpay
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            razorpay_order = client.order.create({
+                "amount": amount_paise,
+                "currency": "INR",
+                "payment_capture": 1,
+            })
+        except Exception as e:
+            logger.error("Razorpay order creation failed for rental_listing=%s user=%s: %r", listing_id, request.user.id, e, exc_info=True)
+            return Response({"error": "Payment gateway is temporarily unavailable."}, status=status.HTTP_502_BAD_GATEWAY)
+
         order = RentalOrder.objects.create(
             listing=listing,
             renter=request.user,
             owner=listing.owner,
-            total_amount=listing.rental_charges,
+            total_amount=total_payable,
             security_deposit=listing.security_deposit,
             phone_number=phone_number,
             email=email,
@@ -664,14 +701,68 @@ class CreateRentalOrderView(generics.GenericAPIView):
             zip_code=zip_code,
             status='Requested',
         )
-        listing.status = 'Rented'
-        listing.save(update_fields=['status'])
 
         return Response({
             "success": True,
             "order_id": order.id,
-            "message": "Rental request sent successfully! 🎉"
+            "razorpay_order_id": razorpay_order['id'],
+            "amount": amount_paise,
+            "currency": "INR",
+            "key_id": settings.RAZORPAY_KEY_ID,
+            "listing_title": listing.title,
+            "message": "Payment initiated! 🎉"
         }, status=status.HTTP_201_CREATED)
+
+class VerifyRentalPaymentView(generics.GenericAPIView):
+    """POST /api/rentals/verify-payment/"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        razorpay_order_id   = request.data.get('razorpay_order_id')
+        razorpay_payment_id = request.data.get('razorpay_payment_id')
+        razorpay_signature  = request.data.get('razorpay_signature')
+        order_id = request.data.get('order_id')
+
+        if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature, order_id]):
+            return Response({"error": "Missing payment details"}, status=status.HTTP_400_BAD_REQUEST)
+
+        order = get_object_or_404(RentalOrder, pk=order_id, renter=request.user)
+
+        if order.status == 'Escrowed':
+            return Response({"success": True, "message": "Already verified.", "order_id": order.id})
+
+        import razorpay
+        import random
+        from decimal import Decimal
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            client.utility.verify_payment_signature({
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature,
+            })
+        except razorpay.errors.SignatureVerificationError:
+            order.status = 'Cancelled'
+            order.save(update_fields=['status'])
+            return Response({"error": "Payment verification failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ── Escrow & Commission Logic ──
+        # 5% commission based ONLY on base Rent price (exclude security deposit)
+        base_rent = Decimal(str(order.total_amount)) - Decimal(str(order.security_deposit))
+        platform_fee = base_rent * Decimal('0.05')
+        seller_earnings = base_rent - platform_fee
+
+        order.platform_fee = platform_fee
+        order.seller_earnings = seller_earnings
+        order.handover_otp = str(random.randint(1000, 9999))
+        
+        order.status = 'Escrowed'
+        order.save()
+        
+        order.listing.status = 'Rented'
+        order.listing.save(update_fields=['status'])
+
+        return Response({"success": True, "message": "Rental Payment verified & Escrowed! 🎉", "order_id": order.id})
 
 
 class UpdateRentalStatusView(generics.GenericAPIView):
@@ -875,3 +966,39 @@ class GamingNewsView(APIView):
             })
 
         return Response({"articles": articles}, status=status.HTTP_200_OK)
+
+class VerifyHandoverOTPView(generics.GenericAPIView):
+    """POST /api/marketplace/verify-handover/"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get('order_id')
+        order_type = request.data.get('order_type') # 'sale' or 'rent'
+        otp = request.data.get('otp')
+
+        if not all([order_id, order_type, otp]):
+            return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if order_type == 'sale':
+            order = get_object_or_404(Order, pk=order_id, seller=request.user)
+            if order.status != 'Escrowed':
+                return Response({"error": f"Invalid order status for handover: {order.status}"}, status=status.HTTP_400_BAD_REQUEST)
+            if order.handover_otp != otp:
+                return Response({"error": "Invalid OTP. Handover failed."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            order.status = 'Delivered'
+            order.save(update_fields=['status'])
+            return Response({"success": True, "message": "Handover successful! Order is now Delivered."})
+            
+        elif order_type == 'rent':
+            order = get_object_or_404(RentalOrder, pk=order_id, owner=request.user)
+            if order.status != 'Escrowed':
+                return Response({"error": f"Invalid rental status for handover: {order.status}"}, status=status.HTTP_400_BAD_REQUEST)
+            if order.handover_otp != otp:
+                return Response({"error": "Invalid OTP. Handover failed."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            order.status = 'In Use'
+            order.save(update_fields=['status'])
+            return Response({"success": True, "message": "Handover successful! Item is now In Use."})
+        else:
+            return Response({"error": "Invalid order type."}, status=status.HTTP_400_BAD_REQUEST)

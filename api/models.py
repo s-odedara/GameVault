@@ -112,6 +112,7 @@ class Listing(models.Model):
     image = models.ImageField(upload_to='marketplace_images/', validators=[validate_image_file])
     seller_contact = models.CharField(max_length=10)   # exactly 10-digit mobile
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
+    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -151,6 +152,7 @@ class RentalListing(models.Model):
     image = models.ImageField(upload_to='rental_images/', validators=[validate_image_file])
     owner_contact = models.CharField(max_length=10)
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Available')
+    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -203,6 +205,7 @@ class Order(models.Model):
         ('Pending', 'Pending'),              # Order placed, payment not yet confirmed
         ('COD_Confirmed', 'COD Confirmed'),  # COD order accepted by seller
         ('Paid', 'Paid'),                    # Online payment verified
+        ('Escrowed', 'Escrowed'),            # Funds held securely by platform
         ('Shipped', 'Shipped'),              # Seller has dispatched the item
         ('Delivered', 'Delivered'),          # Buyer has received the item
         ('Cancelled', 'Cancelled'),          # Payment fail / buyer cancelled
@@ -239,6 +242,11 @@ class Order(models.Model):
     # Shipping / Delivery Tracking
     tracking_number = models.CharField(max_length=100, blank=True, null=True)
 
+    # ── PART 5: Financial Tracking & Security ──
+    platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    seller_earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    handover_otp = models.CharField(max_length=4, blank=True, null=True)
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -250,6 +258,7 @@ class Order(models.Model):
 class RentalOrder(models.Model):
     STATUS_CHOICES = [
         ('Requested', 'Requested'),
+        ('Escrowed', 'Escrowed'),            # Funds held by platform securely
         ('Handed Over', 'Handed Over'),
         ('In Use', 'In Use'),
         ('Return Initiated', 'Return Initiated'),
@@ -272,6 +281,11 @@ class RentalOrder(models.Model):
 
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
+
+    # ── PART 5: Financial Tracking & Security ──
+    platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    seller_earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    handover_otp = models.CharField(max_length=4, blank=True, null=True)
 
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Requested')
     created_at = models.DateTimeField(auto_now_add=True)

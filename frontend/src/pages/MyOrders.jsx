@@ -7,14 +7,14 @@ import { API_BASE_URL } from '../utils/constants';
 function OrderStepper({ order }) {
   const isRazorpay = order.payment_method === 'Razorpay';
   const steps = isRazorpay
-    ? ['Pending', 'Paid', 'Shipped', 'Delivered']
+    ? ['Pending', 'Escrowed', 'Shipped', 'Delivered']
     : ['COD_Confirmed', 'Shipped', 'Delivered'];
   const labels = {
-    Pending: 'Ordered', Paid: 'Paid', COD_Confirmed: 'Confirmed',
+    Pending: 'Ordered', Escrowed: 'Escrowed', Paid: 'Paid', COD_Confirmed: 'Confirmed',
     Shipped: 'Shipped', Delivered: 'Delivered',
   };
   const icons = {
-    Pending: '🛒', Paid: '✅', COD_Confirmed: '📋',
+    Pending: '🛒', Escrowed: '🛡️', Paid: '✅', COD_Confirmed: '📋',
     Shipped: '🚚', Delivered: '🎉',
   };
   const currentIdx = steps.indexOf(order.status);
@@ -41,9 +41,9 @@ function OrderStepper({ order }) {
 
 // ── Rent Order Status Stepper ──────────────────────────────
 function RentalOrderStepper({ order }) {
-  const steps = ['Requested', 'Handed Over', 'In Use', 'Return Initiated', 'Returned & Verified'];
+  const steps = ['Requested', 'Escrowed', 'Handed Over', 'In Use', 'Return Initiated', 'Returned & Verified'];
   const icons = {
-    'Requested': '🛒', 'Handed Over': '🤝', 'In Use': '🎮',
+    'Requested': '🛒', 'Escrowed': '🛡️', 'Handed Over': '🤝', 'In Use': '🎮',
     'Return Initiated': '📦', 'Returned & Verified': '✅',
   };
   const currentIdx = steps.indexOf(order.status);
@@ -75,13 +75,15 @@ function OrderCard({ order, mode, onUpdateStatus }) {
     Pending:       'gv-badge-dark',
     COD_Confirmed: 'gv-badge-amber',
     Paid:          'gv-badge-blue',
+    Escrowed:      'gv-badge-blue',
     Shipped:       'gv-badge-cyan',
     Delivered:     'gv-badge-green',
     Cancelled:     'gv-badge-red',
   };
 
+  const [otpInput, setOtpInput] = useState('');
   const canMarkDelivered = mode === 'buyer' && order.status === 'Shipped';
-  const canMarkShipped = mode === 'seller' && ['Paid', 'COD_Confirmed'].includes(order.status);
+  const canMarkShipped = mode === 'seller' && ['Paid', 'COD_Confirmed', 'Escrowed'].includes(order.status);
 
   return (
     <div className="glass-card" data-aos="fade-up" style={{ marginBottom: 14, padding: '18px 22px' }}>
@@ -106,8 +108,25 @@ function OrderCard({ order, mode, onUpdateStatus }) {
         </div>
       </div>
 
-      {['Pending','COD_Confirmed','Paid','Shipped','Delivered'].includes(order.status) && (
+      {['Pending','COD_Confirmed','Paid','Escrowed','Shipped','Delivered'].includes(order.status) && (
         <OrderStepper order={order} />
+      )}
+
+      {mode === 'buyer' && order.status === 'Escrowed' && (
+        <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--accent-glow)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Handover OTP to share with seller:</div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 2 }}>{order.handover_otp}</div>
+        </div>
+      )}
+
+      {mode === 'seller' && order.status === 'Escrowed' && (
+        <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 8 }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>Enter Buyer's OTP to mark as Delivered:</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="text" className="gv-form-input" style={{ width: 100 }} placeholder="XXXX" maxLength={4} value={otpInput} onChange={e => setOtpInput(e.target.value)} />
+            <button className="btn-gv-primary" onClick={() => onUpdateStatus('buy', order.id, 'Delivered', otpInput)}>Verify OTP</button>
+          </div>
+        </div>
       )}
 
       {order.tracking_number && (
@@ -177,12 +196,14 @@ function RentalOrderCard({ order, mode, onUpdateStatus }) {
   const [expanded, setExpanded] = useState(false);
   const statusStyle = {
     'Requested': 'gv-badge-amber',
+    'Escrowed': 'gv-badge-blue',
     'Handed Over': 'gv-badge-blue',
     'In Use': 'gv-badge-cyan',
     'Return Initiated': 'gv-badge-amber',
     'Returned & Verified': 'gv-badge-green',
   };
 
+  const [otpInput, setOtpInput] = useState('');
   const showOwnerHandOver = mode === 'owner' && order.status === 'Requested';
   const showRenterReceive = mode === 'renter' && order.status === 'Handed Over';
   const showRenterReturn = mode === 'renter' && order.status === 'In Use';
@@ -209,6 +230,23 @@ function RentalOrderCard({ order, mode, onUpdateStatus }) {
       </div>
 
       <RentalOrderStepper order={order} />
+
+      {mode === 'renter' && order.status === 'Escrowed' && (
+        <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--accent-glow)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Handover OTP to share with owner:</div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 2 }}>{order.handover_otp}</div>
+        </div>
+      )}
+
+      {mode === 'owner' && order.status === 'Escrowed' && (
+        <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 8 }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>Enter Renter's OTP to hand over item:</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="text" className="gv-form-input" style={{ width: 100 }} placeholder="XXXX" maxLength={4} value={otpInput} onChange={e => setOtpInput(e.target.value)} />
+            <button className="btn-gv-primary" onClick={() => onUpdateStatus('rent', order.id, 'Handed Over', otpInput)}>Verify OTP</button>
+          </div>
+        </div>
+      )}
 
       <button onClick={() => setExpanded(e => !e)} className="btn-gv-ghost" style={{ marginTop: 12, padding: '5px 14px', fontSize: '0.75rem' }}>
         {expanded ? '▲ Hide Details' : '▼ Rental Details'}
@@ -295,8 +333,28 @@ function MyOrders() {
     }).catch(() => setLoading(false));
   }, [token]);
 
-  const handleUpdateStatus = async (type, orderId, newStatus) => {
+  const handleUpdateStatus = async (type, orderId, newStatus, otp = null) => {
     try {
+      if (otp) {
+        // Handover OTP Verification flow
+        const res = await fetch(`${API_BASE_URL}/marketplace/verify-handover/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+          body: JSON.stringify({ order_type: type === 'buy' ? 'sale' : 'rent', order_id: orderId, otp }),
+        });
+        if (res.ok) {
+          toast.success('Handover Verified! Item delivered successfully.');
+          // Refresh data since status is changed on backend
+          window.location.reload();
+          return;
+        } else {
+          const err = await res.json();
+          toast.error(err.error || 'Invalid OTP.');
+          return;
+        }
+      }
+
+      // Normal status update flow
       const endpoint = type === 'buy' 
         ? `${API_BASE_URL}/marketplace/orders/${orderId}/update-status/`
         : `${API_BASE_URL}/rentals/orders/${orderId}/update-status/`;

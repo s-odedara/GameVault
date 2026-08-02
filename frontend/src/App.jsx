@@ -27,6 +27,7 @@ import ListingDetail   from './pages/ListingDetail';
 import MyListings      from './pages/MyListings';
 import MyOrders        from './pages/MyOrders';
 import RentItem        from './pages/RentItem';
+import AdminDashboard  from './pages/AdminDashboard';
 
 // ─── Universal Search Bar ─────────────────────────────────
 function UniversalSearch() {
@@ -236,6 +237,8 @@ function Layout({ sidebarOpen, setSidebarOpen }) {
           <Route path="/marketplace/listing/:id"  element={<ListingDetail />} />
           <Route path="/marketplace/my-listings"  element={<MyListings />} />
           <Route path="/marketplace/orders"       element={<MyOrders />} />
+          {/* ── Admin ── */}
+          <Route path="/admin-dashboard"          element={<AdminDashboard />} />
         </Routes>
       </div>
     </div>

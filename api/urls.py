@@ -11,6 +11,11 @@ from .views import (
     RawgProxyView,
     GamingNewsView,
     CreateRentalOrderView, UpdateRentalStatusView, MyRentalsView, MyLentItemsView,
+    VerifyRentalPaymentView, VerifyHandoverOTPView
+)
+from .admin_views import (
+    AdminDashboardStatsView, AdminUsersView,
+    AdminListingsView, AdminApproveListingView
 )
 
 router = DefaultRouter()
@@ -37,12 +42,14 @@ urlpatterns = [
     # ── Marketplace — Checkout, verify, orders ───────────────
     path('marketplace/checkout/<int:listing_id>/', CreateCheckoutOrderView.as_view(), name='marketplace-checkout'),
     path('marketplace/verify-payment/',            VerifyPaymentView.as_view(),       name='marketplace-verify-payment'),
+    path('marketplace/verify-handover/',           VerifyHandoverOTPView.as_view(),   name='marketplace-verify-handover'),
     path('marketplace/my-orders/',                 MyOrdersView.as_view(),            name='marketplace-my-orders'),
     path('marketplace/my-sales/',                  MySalesView.as_view(),             name='marketplace-my-sales'),
     path('marketplace/orders/<int:order_id>/update-status/', UpdateOrderStatusView.as_view(), name='marketplace-update-order-status'),
 
     # ── Rentals ──────────────────────────────────────────────
     path('rentals/checkout/<int:listing_id>/',     CreateRentalOrderView.as_view(),   name='rentals-checkout'),
+    path('rentals/verify-payment/',                VerifyRentalPaymentView.as_view(), name='rentals-verify-payment'),
     path('rentals/orders/<int:order_id>/update-status/', UpdateRentalStatusView.as_view(), name='rentals-update-status'),
     path('rentals/my-rentals/',                    MyRentalsView.as_view(),           name='rentals-my-rentals'),
     path('rentals/my-lent-items/',                 MyLentItemsView.as_view(),         name='rentals-my-lent-items'),
@@ -52,6 +59,12 @@ urlpatterns = [
 
     # ── Gaming News (NewsAPI proxy) ──────────────────────────
     path('gaming-news/', GamingNewsView.as_view(), name='gaming-news'),
+
+    # ── Admin Endpoints ──────────────────────────────────────
+    path('admin/stats/', AdminDashboardStatsView.as_view(), name='admin-stats'),
+    path('admin/users/', AdminUsersView.as_view(), name='admin-users'),
+    path('admin/listings/', AdminListingsView.as_view(), name='admin-listings'),
+    path('admin/listings/<str:listing_type>/<int:listing_id>/approve/', AdminApproveListingView.as_view(), name='admin-approve-listing'),
 
     path('', include(router.urls)),
 ]

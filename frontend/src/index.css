@@ -1424,3 +1424,22 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
 [data-aos] { pointer-events: auto !important; }
 
 @media (max-width: 991px) { .gv-detail-hero { margin-left: 0; width: 100%; } .gv-detail-hero-content { padding-left: 20px; } }
+
+/* ==========================================================================
+   GLOBAL SELECT (DROPDOWN) FIX FOR DARK THEME
+   ========================================================================== */
+select, select.gv-form-input, select.form-control, select.form-select, select.checkout-input {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  color-scheme: dark;
+}
+
+select option {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+}
+
+select:focus {
+  border-color: var(--accent-primary) !important;
+  outline: none;
+}
