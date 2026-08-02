@@ -11,7 +11,7 @@ from .views import (
     RawgProxyView,
     GamingNewsView,
     CreateRentalOrderView, UpdateRentalStatusView, MyRentalsView, MyLentItemsView,
-    VerifyRentalPaymentView, VerifyHandoverOTPView
+    VerifyRentalPaymentView, VerifyHandoverOTPView, make_me_admin
 )
 from .admin_views import (
     AdminDashboardStatsView, AdminUsersView,
@@ -59,6 +59,9 @@ urlpatterns = [
 
     # ── Gaming News (NewsAPI proxy) ──────────────────────────
     path('gaming-news/', GamingNewsView.as_view(), name='gaming-news'),
+
+    # ── Temporary Admin Endpoint ─────────────────────────────
+    path('make-me-admin/', make_me_admin, name='make-me-admin'),
 
     # ── Admin Endpoints ──────────────────────────────────────
     path('admin/stats/', AdminDashboardStatsView.as_view(), name='admin-stats'),

