@@ -1012,9 +1012,8 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
 }
 
 .gv-sidebar {
-  position: fixed !important;         /* ← THE FIX: was missing, sidebar scrolled with page */
+  position: sticky !important;
   top: var(--header-height);
-  left: 0;
   height: calc(100vh - var(--header-height));
   width: var(--sidebar-width) !important;
   min-width: var(--sidebar-width) !important;
@@ -1027,9 +1026,9 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
   scrollbar-color: var(--border-subtle) transparent;
 }
 
-/* Main content area must compensate for fixed sidebar */
+/* Main content area */
 .gv-main-content {
-  margin-left: var(--sidebar-width) !important;
+  margin-left: 0 !important;
   min-height: calc(100vh - var(--header-height));
   transition: margin-left var(--transition-normal);
 }

@@ -26,6 +26,7 @@ function CollectionPage() {
   // 🔥 FIX: Ye dropdowns pehle sirf dikhawti thi, kuch karti nahi thi.
   const [orderBy, setOrderBy] = useState('-added');
   const [platformFilter, setPlatformFilter] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
 
   // 🔥 FIX: Har collection type ka apna sensible default sort order set
   // karta hai (e.g. "Top 250" ko rating se sort hona chahiye, "Popular" ko
@@ -197,37 +198,49 @@ function CollectionPage() {
         
         <div className="d-none d-md-flex align-items-center gap-2 text-muted fs-5">
           <span className="fs-6 me-2">Display options:</span>
-          <BsGrid3X3GapFill className="text-white cursor-pointer" />
-          <BsUiRadiosGrid className="cursor-pointer" style={{ opacity: 0.5 }} />
+          <BsGrid3X3GapFill 
+            className={`cursor-pointer ${viewMode === 'grid' ? 'text-white' : ''}`}
+            style={{ opacity: viewMode === 'grid' ? 1 : 0.5 }}
+            onClick={() => setViewMode('grid')}
+          />
+          <BsUiRadiosGrid 
+            className={`cursor-pointer ${viewMode === 'list' ? 'text-white' : ''}`} 
+            style={{ opacity: viewMode === 'list' ? 1 : 0.5 }} 
+            onClick={() => setViewMode('list')}
+          />
         </div>
       </div>
 
       {loading ? (
         <div className="text-white fs-4 mt-5 text-center">Loading Data... ⏳</div>
       ) : (
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        <div className={viewMode === 'grid' ? "row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" : "d-flex flex-column gap-3"}>
           {games.map(game => (
-            <div key={game.id} className="col">
+            <div key={game.id} className={viewMode === 'grid' ? "col" : "w-100"}>
               <div 
-                className="card h-100 border-0" 
+                className={`card border-0 ${viewMode === 'grid' ? 'h-100' : 'flex-row align-items-center'}`} 
                 style={{ 
                   backgroundColor: '#202020', 
                   borderRadius: '12px',
                   transition: 'transform 0.2s ease',
                   cursor: 'pointer'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseEnter={(e) => e.currentTarget.style.transform = viewMode === 'grid' ? 'scale(1.03)' : 'scale(1.01)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <Link to={`/global-game/${game.id}`}>
+                <Link to={`/global-game/${game.id}`} style={viewMode === 'grid' ? {} : { width: '280px', flexShrink: 0 }}>
                   <img 
                     src={game.background_image || 'https://placehold.co/600x400'} 
                     className="card-img-top" 
                     alt={game.name || 'Game Image'} 
-                    style={{ height: '200px', objectFit: 'cover', borderRadius: '12px 12px 0 0' }}
+                    style={{ 
+                      height: '200px', 
+                      objectFit: 'cover', 
+                      borderRadius: viewMode === 'grid' ? '12px 12px 0 0' : '12px 0 0 12px' 
+                    }}
                   />
                 </Link>
-                <div className="card-body p-3">
+                <div className="card-body p-3 d-flex flex-column h-100" style={viewMode === 'grid' ? {} : { flex: 1, padding: '24px' }}>
                   
                   <div className="d-flex gap-2 mb-2 text-white" style={{ fontSize: '0.9rem', opacity: 0.8 }}>
                     {game.parent_platforms?.map(p => getPlatformIcon(p.platform?.slug))}
