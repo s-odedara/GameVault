@@ -130,8 +130,10 @@ function GlobalGameDetail() {
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', paddingBottom: 80 }}>
 
       {/* ── Full-Page Hero ─────────────────────────────────── */}
-      <div className="gv-detail-hero" style={{ backgroundImage: `url(${game.background_image})` }}>
-        <div className="gv-detail-hero-overlay" />
+      <div className="gv-detail-hero-wrapper">
+        <div className="gv-detail-hero" style={{ backgroundImage: `url(${game.background_image})` }}>
+          <div className="gv-detail-hero-overlay" />
+        </div>
         <div className="gv-detail-hero-content">
           {/* Breadcrumb */}
           <div style={{ fontSize: '0.72rem', letterSpacing: 2, color: 'rgba(255,255,255,0.55)',
@@ -154,28 +156,6 @@ function GlobalGameDetail() {
 
           {/* Title */}
           <h1 className="gv-detail-title">{game.name}</h1>
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-            <button
-              onClick={handleAddToVault}
-              disabled={isAdding || isAdded}
-              className="btn-gv-primary btn-pulse-vault btn-bounce"
-              style={{ padding: '10px 24px', fontSize: '0.9rem',
-                       ...(isAdded ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)' } : {}) }}
-            >
-              {isAdding ? '⏳ Adding…' : isAdded ? '✓ In Vault' : '+ Add to Vault'}
-            </button>
-
-            <button
-              onClick={handleAddToWishlist}
-              disabled={isWishlisting || isWishlisted}
-              className="btn-wishlist btn-pulse-wish btn-bounce"
-              style={{ padding: '10px 20px', fontSize: '0.9rem' }}
-            >
-              {isWishlisting ? '⏳' : isWishlisted ? '💜 Wishlisted' : '♡ Wishlist'}
-            </button>
-          </div>
 
           {/* Meta Row */}
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)' }}>
@@ -211,6 +191,28 @@ function GlobalGameDetail() {
               style={{ color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '0.95rem' }}
               dangerouslySetInnerHTML={{ __html: game.description || '<p>No description available.</p>' }}
             />
+
+            {/* Action Buttons (Restored & Moved Here) */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: '1.5rem' }}>
+              <button
+                onClick={handleAddToVault}
+                disabled={isAdding || isAdded}
+                className="btn-gv-primary btn-pulse-vault btn-bounce"
+                style={{ padding: '10px 24px', fontSize: '0.9rem',
+                         ...(isAdded ? { background: 'linear-gradient(135deg,#22c55e,#16a34a)' } : {}) }}
+              >
+                {isAdding ? '⏳ Adding…' : isAdded ? '✓ In Vault' : '+ Add to Vault'}
+              </button>
+
+              <button
+                onClick={handleAddToWishlist}
+                disabled={isWishlisting || isWishlisted}
+                className="btn-wishlist btn-pulse-wish btn-bounce"
+                style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+              >
+                {isWishlisting ? '⏳' : isWishlisted ? '💜 Wishlisted' : '♡ Wishlist'}
+              </button>
+            </div>
           </div>
 
           {/* Right — Visuals + Stats */}
