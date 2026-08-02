@@ -127,6 +127,7 @@ function Navbar({ onToggleSidebar }) {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('is_staff');
     window.location.href = '/login';
   };
 

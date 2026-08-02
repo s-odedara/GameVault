@@ -83,6 +83,7 @@ function Login() {
           toast.success('👑 Welcome, Admin!')
           navigate('/admin-dashboard')
         } else {
+          localStorage.removeItem('is_staff')
           toast.success(isLogin ? '🟢 Welcome back!' : '🚀 Account created!')
           navigate('/')
         }
