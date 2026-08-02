@@ -160,16 +160,6 @@ function ExploreGames() {
     fetchGlobalGames('', 1, true); 
   }, []);
 
-  useEffect(() => {
-    // Only refresh AOS for the initial load
-    if (globalGames.length > 0 && page === 1) {
-      setTimeout(() => {
-        if (window.AOS) {
-          window.AOS.refreshHard();
-        }
-      }, 150);
-    }
-  }, [globalGames, page]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -180,9 +170,8 @@ function ExploreGames() {
     <div style={{ padding: '32px 28px 60px' }}>
       {/* Header */}
       <div
-        data-aos="fade-down"
         style={{ marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16,
-                 justifyContent: 'space-between', alignItems: 'center' }}
+                 justifyContent: 'space-between', alignItems: 'center', animation: 'fadeInDown 0.6s ease-out' }}
       >
         <div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 900, marginBottom: 4 }}>
@@ -231,17 +220,14 @@ function ExploreGames() {
           <div className="row g-4">
             {globalGames.map((game, idx) => {
               const isLastElement = globalGames.length === idx + 1;
-              // Only apply AOS to the first page to prevent dynamically appended cards from getting stuck in opacity:0
-              const useAOS = idx < 40; 
+              const delay = Math.min((idx % 40) * 0.03, 0.2);
               
               return (
                 <div
                   ref={isLastElement ? lastGameElementRef : null}
                   key={`${game.id}-${idx}`}
                   className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
-                  data-aos={useAOS ? "fade-up" : undefined}
-                  data-aos-delay={useAOS ? Math.min((idx % 40) * 30, 200) : undefined}
-                  style={!useAOS ? { animation: 'fadeIn 0.5s ease-in-out' } : {}}
+                  style={{ animation: `fadeIn 0.5s ease-out forwards ${delay}s`, opacity: 0 }}
                 >
                   <ExploreCard game={game} navigate={navigate} />
                 </div>
