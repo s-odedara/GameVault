@@ -42,7 +42,7 @@ function SellItem() {
         method: 'POST', headers: { 'Authorization': `Token ${token}` }, body: fd,
       });
       if (!res.ok) throw new Error();
-      toast.success('🎉 Your item is live on the Marketplace!');
+      toast.success('Your item has been submitted successfully and is pending admin approval. It will appear on the marketplace once approved.');
       navigate('/marketplace');
     } catch { toast.error("Couldn't publish listing. Please check your details."); }
     finally { setIsSubmitting(false); }

@@ -48,7 +48,7 @@ function RentItem() {
         const err = await res.json();
         throw new Error(Object.values(err)[0] || 'Failed to create listing');
       }
-      toast.success('🎉 Your rental listing is live!');
+      toast.success('Your item has been submitted successfully and is pending admin approval. It will appear on the marketplace once approved.');
       navigate('/marketplace');
     } catch (err) { toast.error(err.message); }
     finally { setIsSubmitting(false); }
