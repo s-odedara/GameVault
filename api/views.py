@@ -12,11 +12,12 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 import logging
 import razorpay
+import urllib.parse
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
 from . import auth_throttle
-from .models import Game, Profile, Post, Comment, Follow, Listing, Order, RentalListing, CheckoutOTP
+from .models import Game, Profile, Post, Comment, Follow, Listing, Order, RentalListing, CheckoutOTP, CachedRawgResponse
 from .serializers import (
     GameSerializer, ProfileSerializer, PostSerializer, CommentSerializer,
     RegisterSerializer, ListingSerializer, OrderSerializer, CheckoutFormSerializer,
@@ -771,20 +772,44 @@ class RawgProxyView(APIView):
 
         params = request.query_params.dict()
         params.pop('key', None)
+
+        # Generate a deterministic cache key string from the parameters
+        # Sorting ensures the same parameters in different order map to the same key
+        query_params_str = urllib.parse.urlencode(sorted(params.items()))
+
         params['key'] = settings.RAWG_API_KEY
 
         try:
             resp = http_requests.get(f'https://api.rawg.io/api/{endpoint}', params=params, timeout=8)
-        except http_requests.RequestException as e:
-            logger.error("RAWG proxy request failed for endpoint=%s: %r", endpoint, e, exc_info=True)
-            return Response({"error": "Couldn't reach the game database right now. Please try again."}, status=status.HTTP_502_BAD_GATEWAY)
-
-        try:
+            resp.raise_for_status() # Will trigger RequestException on 4xx/5xx
             data = resp.json()
-        except ValueError:
-            data = {"error": "Unexpected response from game database."}
+            
+            # Save the successful response to our local fallback cache
+            CachedRawgResponse.objects.update_or_create(
+                endpoint=endpoint,
+                query_params=query_params_str,
+                defaults={'data': data}
+            )
+            return Response(data, status=status.HTTP_200_OK)
 
-        return Response(data, status=resp.status_code)
+        except (http_requests.RequestException, ValueError) as e:
+            logger.error("RAWG proxy request failed for endpoint=%s: %r", endpoint, e, exc_info=True)
+            
+            # ── FALLBACK LOGIC ──
+            # First, try to find an exact match for the endpoint and parameters
+            try:
+                cached = CachedRawgResponse.objects.get(endpoint=endpoint, query_params=query_params_str)
+                logger.info("Serving exact fallback cache for %s ? %s", endpoint, query_params_str)
+                return Response(cached.data, status=status.HTTP_200_OK)
+            except CachedRawgResponse.DoesNotExist:
+                # If exact match fails, try to return ANY cached data for that endpoint (better than a blank screen)
+                cached_any = CachedRawgResponse.objects.filter(endpoint=endpoint).order_by('-updated_at').first()
+                if cached_any:
+                    logger.info("Serving generalized fallback cache for %s", endpoint)
+                    return Response(cached_any.data, status=status.HTTP_200_OK)
+                
+                # Absolute failure
+                return Response({"error": "Couldn't reach the game database and no offline data available."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 # ======================================================================

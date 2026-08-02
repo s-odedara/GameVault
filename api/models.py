@@ -279,3 +279,23 @@ class RentalOrder(models.Model):
 
     def __str__(self):
         return f"RentalOrder #{self.id} — {self.listing.title} [{self.status}]"
+
+# ======================================================================
+# API CACHING & FALLBACK 
+# ======================================================================
+
+class CachedRawgResponse(models.Model):
+    """
+    Stores RAWG API responses locally to serve as a robust fallback during API downtime.
+    Allows for zero-dependency offline mode presentation by returning category-aware seed data.
+    """
+    endpoint = models.CharField(max_length=255)
+    query_params = models.CharField(max_length=500, blank=True)
+    data = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('endpoint', 'query_params')
+
+    def __str__(self):
+        return f"Cache: {self.endpoint} ? {self.query_params}"
