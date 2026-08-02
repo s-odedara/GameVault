@@ -134,13 +134,11 @@ function GameDetail() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', paddingBottom: 80 }}>
 
-      {/* ── Immersive Hero ─────────────────────────────────── */}
-      <div
-        className="gv-detail-hero"
-        style={{ backgroundImage: heroImg ? `url(${heroImg})` : undefined,
-                 backgroundColor: heroImg ? undefined : 'var(--bg-elevated)' }}
-      >
-        <div className="gv-detail-hero-overlay" />
+      {/* ── Full-Page Hero ─────────────────────────────────── */}
+      <div className="gv-detail-hero-wrapper">
+        <div className="gv-detail-hero" style={{ backgroundImage: heroImg ? `url(${heroImg})` : undefined, backgroundColor: heroImg ? undefined : 'var(--bg-elevated)' }}>
+          <div className="gv-detail-hero-overlay" />
+        </div>
         <div className="gv-detail-hero-content">
           <Link to="/vault" style={{ display: 'inline-block', marginBottom: 16 }}>
             <span className="gv-badge gv-badge-dark" style={{ cursor: 'pointer', fontSize: '0.78rem' }}>
