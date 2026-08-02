@@ -192,7 +192,7 @@ function ExploreGames() {
                 <div
                   key={`${game.id}-${idx}`}
                   className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
-                  style={{ animation: `fadeIn 0.5s ease-out forwards ${delay}s`, opacity: 0 }}
+                  style={{ opacity: 1, visibility: 'visible', transition: 'none' }}
                 >
                   <ExploreCard game={game} navigate={navigate} />
                 </div>
