@@ -552,6 +552,12 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--accent-glow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 /* -----------------------------------------------------------
@@ -606,6 +612,11 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  display: block;
 }
 
 .gv-sidebar-section-title {

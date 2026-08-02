@@ -205,7 +205,7 @@ function Layout({ sidebarOpen, setSidebarOpen }) {
     <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 62px)' }}>
       {sidebarOpen && (
         <div 
-          className="gv-sidebar-overlay d-md-none" 
+          className="gv-sidebar-overlay d-lg-none" 
           onClick={() => setSidebarOpen(false)}
         />
       )}
