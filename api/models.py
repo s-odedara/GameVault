@@ -183,6 +183,7 @@ class CheckoutOTP(models.Model):
     def generate_for(cls, phone: str):
         """Create (or overwrite) a fresh 6-digit OTP for this phone number."""
         otp = f"{random.randint(0, 999999):06d}"
+        print(f"--- DEBUG OTP FOR TESTING: {otp} ---")
         expires = timezone.now() + timezone.timedelta(minutes=5)
         # Invalidate all previous OTPs for this phone to prevent parallel use
         cls.objects.filter(phone_number=phone, is_used=False).delete()

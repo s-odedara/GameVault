@@ -559,6 +559,7 @@ class VerifyPaymentView(generics.GenericAPIView):
         order.platform_fee = platform_fee
         order.seller_earnings = seller_earnings
         order.handover_otp = str(random.randint(1000, 9999))
+        print(f"--- DEBUG OTP FOR TESTING: {order.handover_otp} ---")
         order.razorpay_payment_id = razorpay_payment_id
         order.razorpay_signature  = razorpay_signature
         order.status = 'Escrowed'
@@ -755,6 +756,7 @@ class VerifyRentalPaymentView(generics.GenericAPIView):
         order.platform_fee = platform_fee
         order.seller_earnings = seller_earnings
         order.handover_otp = str(random.randint(1000, 9999))
+        print(f"--- DEBUG OTP FOR TESTING: {order.handover_otp} ---")
         
         order.status = 'Escrowed'
         order.save()
