@@ -274,4 +274,8 @@ TWILIO_FROM_NUMBER    = config('TWILIO_FROM_NUMBER', default='')
 # ── NewsAPI (Trending Gaming News on Community Page) ─────────────────────────
 NEWS_API_KEY = config('NEWS_API_KEY', default='')
 
+# ── Google OAuth ─────────────────────────────────────────────────────────────
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

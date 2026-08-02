@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     GameViewSet, ProfileViewSet, PostViewSet, CommentViewSet,
-    RegisterView, LoginView, FollowViewSet,
+    RegisterView, LoginView, GoogleLoginView, FollowViewSet,
     ListingViewSet, RentalListingViewSet,
     CreateCheckoutOrderView, VerifyPaymentView,
     MyOrdersView, MySalesView, UpdateOrderStatusView,
@@ -25,6 +25,7 @@ router.register(r'rentals',  RentalListingViewSet, basename='rental')
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/',    LoginView.as_view(),    name='login'),
+    path('auth/google/', GoogleLoginView.as_view(), name='google-login'),
 
     # ── Community ────────────────────────────────────────────
     path('posts/<int:pk>/upvote/', UpvotePostView.as_view(), name='post-upvote'),

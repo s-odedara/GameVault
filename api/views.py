@@ -9,8 +9,11 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.conf import settings
+from django.utils.crypto import get_random_string
 import logging
 import razorpay
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from . import auth_throttle
 from .models import Game, Profile, Post, Comment, Follow, Listing, Order, RentalListing, CheckoutOTP
@@ -150,6 +153,46 @@ class LoginView(ObtainAuthToken):
         auth_throttle.record_success(ip, username)
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key, "user_id": user.id, "username": user.username})
+
+class GoogleLoginView(generics.GenericAPIView):
+    """POST /api/auth/google/"""
+    permission_classes = [AllowAny]
+    throttle_scope = 'auth'
+
+    def post(self, request, *args, **kwargs):
+        credential = request.data.get('credential')
+        if not credential:
+            return Response({"error": "No credential provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                credential, google_requests.Request(), settings.GOOGLE_CLIENT_ID
+            )
+            email = idinfo.get('email')
+            if not email:
+                return Response({"error": "Google token missing email"}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = User.objects.filter(email=email).first()
+            if not user:
+                base_username = email.split('@')[0]
+                username = base_username
+                count = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{count}"
+                    count += 1
+                
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=get_random_string(32)
+                )
+
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key, "user_id": user.id, "username": user.username})
+            
+        except ValueError:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class FollowViewSet(viewsets.ViewSet):

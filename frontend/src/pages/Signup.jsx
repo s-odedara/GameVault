@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { GoogleLogin } from '@react-oauth/google'
 import { API_BASE_URL } from '../utils/constants'
 
 function Signup() {
@@ -55,6 +56,30 @@ function Signup() {
     }
   };
 
+  const handleGoogleLogin = (credentialResponse) => {
+    setIsLoading(true);
+    fetch(`${API_BASE_URL}/auth/google/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: credentialResponse.credential }),
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Google Login Failed');
+      return res.json();
+    })
+    .then(data => {
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('user_id', data.user_id);
+        toast.success('🚀 Account created with Google!');
+        navigate('/');
+      }
+    })
+    .catch(err => toast.error(err.message))
+    .finally(() => setIsLoading(false));
+  };
+
   return (
     <div className="container mt-5 d-flex justify-content-center">
       <div className="card bg-secondary text-white shadow border-0" style={{ width: '400px' }}>
@@ -89,6 +114,13 @@ function Signup() {
               {isLoading ? 'Creating Account...' : 'Sign Up'}
             </button>
           </form>
+
+          <div style={{ margin: '20px 0', display: 'flex', justifyContent: 'center' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => toast.error('Google Login Failed')}
+            />
+          </div>
 
           <div className="text-center">
             <span className="text-light">Already have an account? </span>

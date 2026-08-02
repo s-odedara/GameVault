@@ -25,3 +25,4 @@ twilio==9.10.9
 cloudinary==1.45.0
 django-cloudinary-storage==0.3.0
 setuptools<70.0.0
+google-auth==2.33.0

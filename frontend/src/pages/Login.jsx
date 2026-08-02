@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { GoogleLogin } from '@react-oauth/google'
 import { API_BASE_URL } from '../utils/constants';
 
 function Login() {
@@ -31,6 +32,30 @@ function Login() {
     }
     return true
   }
+
+  const handleGoogleLogin = (credentialResponse) => {
+    setIsLoading(true);
+    fetch(`${API_BASE_URL}/auth/google/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: credentialResponse.credential }),
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Google Login Failed');
+      return res.json();
+    })
+    .then(data => {
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('user_id', data.user_id);
+        toast.success(isLogin ? '🟢 Welcome back with Google!' : '🚀 Account created with Google!');
+        navigate('/');
+      }
+    })
+    .catch(err => toast.error(err.message))
+    .finally(() => setIsLoading(false));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -112,6 +137,13 @@ function Login() {
             {isLoading ? '⏳ Processing…' : isLogin ? '🔓 Enter Vault' : '🚀 Create Account'}
           </button>
         </form>
+
+        <div style={{ margin: '20px 0', display: 'flex', justifyContent: 'center' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleLogin}
+            onError={() => toast.error('Google Login Failed')}
+          />
+        </div>
 
         <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.84rem', color: 'var(--text-muted)' }}>
           {isLogin ? "Don't have an account?" : "Already have an account?"}
