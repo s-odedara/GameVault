@@ -178,6 +178,9 @@ function Navbar({ onToggleSidebar }) {
         {token ? (
           <>
             <span className="gv-nav-username d-none d-md-inline">👤 {username}</span>
+            {localStorage.getItem('is_staff') === 'true' && (
+              <Link to="/admin-dashboard" className="gv-nav-btn" style={{ textDecoration: 'none', borderColor: 'var(--accent-glow)', color: 'var(--accent-glow)' }}>Admin</Link>
+            )}
             {/* FIX 1.6: "View Profile" is now a working Link, not dead text */}
             <Link to="/profile" className="gv-nav-btn" style={{ textDecoration: 'none' }}>Profile</Link>
             <button onClick={handleLogout} className="gv-nav-btn" style={{ border: '1px solid rgba(239,68,68,0.35)', color: 'var(--accent-danger)' }}>

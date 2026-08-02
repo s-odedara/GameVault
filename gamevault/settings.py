@@ -215,6 +215,7 @@ else:
 # TEST mode keys yahan se free milti hain (koi KYC/business account
 # zaroori nahi TEST mode ke liye): https://dashboard.razorpay.com/app/keys
 # .env mein daalo — code kabhi hardcode mat karna.
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
 
 # 🔥 NAYA (Security): Server-side error logging. Deployment platforms
