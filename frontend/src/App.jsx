@@ -209,7 +209,7 @@ function Layout({ sidebarOpen, setSidebarOpen }) {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <RawgSidebar transparent={isDetailPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <RawgSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {/* gv-main-content class applies margin-left: var(--sidebar-width) */}
       <div className="gv-main-content" style={{ flex: 1, overflowX: 'hidden' }}>
         <Routes>
