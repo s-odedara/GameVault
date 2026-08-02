@@ -165,9 +165,18 @@ function ExploreGames() {
     } finally {
       setLoading(false);
       setLoadingMore(false);
-      setTimeout(() => window.AOS?.refresh(), 100);
     }
   };
+
+  useEffect(() => {
+    if (globalGames.length > 0) {
+      setTimeout(() => {
+        if (window.AOS) {
+          window.AOS.refreshHard();
+        }
+      }, 150);
+    }
+  }, [globalGames]);
 
   const handleSearch = (e) => {
     e.preventDefault();
