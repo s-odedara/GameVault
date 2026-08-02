@@ -172,23 +172,34 @@ class GoogleLoginView(generics.GenericAPIView):
             if not email:
                 return Response({"error": "Google token missing email"}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Generate proper username
+            given_name = idinfo.get('given_name')
+            name = idinfo.get('name')
+            base_username = given_name if given_name else (name.split()[0] if name else email.split('@')[0])
+            
             user = User.objects.filter(email=email).first()
             if not user:
-                base_username = email.split('@')[0]
-                username = base_username
+                username = base_username.replace(' ', '')
                 count = 1
-                while User.objects.filter(username=username).exists():
-                    username = f"{base_username}{count}"
+                while User.objects.filter(username__iexact=username).exists():
+                    username = f"{base_username.replace(' ', '')}{count}"
                     count += 1
                 
                 user = User.objects.create_user(
                     username=username,
                     email=email,
-                    password=get_random_string(32)
+                    password=get_random_string(32),
+                    first_name=given_name or ''
                 )
+            else:
+                if given_name and not user.first_name:
+                    user.first_name = given_name
+                    user.save(update_fields=['first_name'])
 
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key, "user_id": user.id, "username": user.username})
+            # Return actual name as actual_name
+            actual_name = user.first_name if user.first_name else user.username
+            return Response({"token": token.key, "user_id": user.id, "username": user.username, "actual_name": actual_name})
             
         except ValueError:
             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)

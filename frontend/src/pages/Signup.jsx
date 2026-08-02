@@ -72,7 +72,9 @@ function Signup() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
         localStorage.setItem('user_id', data.user_id);
-        toast.success('🚀 Account created with Google!');
+        
+        const displayName = data.actual_name || data.username;
+        toast.success(`🚀 Account created, ${displayName}!`);
         navigate('/');
       }
     })

@@ -49,7 +49,9 @@ function Login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
         localStorage.setItem('user_id', data.user_id);
-        toast.success(isLogin ? '🟢 Welcome back with Google!' : '🚀 Account created with Google!');
+        
+        const displayName = data.actual_name || data.username;
+        toast.success(isLogin ? `🟢 Welcome back, ${displayName}!` : `🚀 Account created, ${displayName}!`);
         navigate('/');
       }
     })

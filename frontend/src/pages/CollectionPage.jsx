@@ -36,6 +36,11 @@ function CollectionPage() {
       'popular': '-metacritic',
       'best-of-year': '-added',
       'calendar': 'released',
+      'new': '-added',
+      'top': '-rating',
+      'best2024': '-rating',
+      'upcoming': 'released',
+      'recent': '-added',
     };
     setOrderBy(defaultOrderByType[type] || '-added');
     setPlatformFilter('');
@@ -92,9 +97,36 @@ function CollectionPage() {
         pageTitle = 'All time top 250';
         break;
       }
-      case 'best-of-year': {
+            case 'best-of-year': {
         dateParam = `${currentYear}-01-01,${currentYear}-12-31`;
         pageTitle = `Best of ${currentYear}`;
+        break;
+      }
+      case 'new': {
+        const last6Months = new Date();
+        last6Months.setMonth(today.getMonth() - 6);
+        dateParam = `${formatDate(last6Months)},${formatDate(today)}`;
+        pageTitle = 'New & Trending';
+        break;
+      }
+      case 'top': {
+        pageTitle = 'Top Rated';
+        break;
+      }
+      case 'best2024': {
+        dateParam = `2024-01-01,2024-12-31`;
+        pageTitle = 'Best of 2024';
+        break;
+      }
+      case 'upcoming': {
+        const nextYear = new Date();
+        nextYear.setFullYear(today.getFullYear() + 1);
+        dateParam = `${formatDate(today)},${formatDate(nextYear)}`;
+        pageTitle = 'Coming Soon';
+        break;
+      }
+      case 'recent': {
+        pageTitle = 'Recently Added';
         break;
       }
       default: {
