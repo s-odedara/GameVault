@@ -202,7 +202,7 @@ function Layout({ sidebarOpen, setSidebarOpen }) {
   const isDetailPage = /^\/(global-game|game)\//.test(location.pathname);
 
   return (
-    <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 62px)' }}>
+    <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', height: 'calc(100vh - 62px)', overflow: 'hidden' }}>
       {sidebarOpen && (
         <div 
           className="gv-sidebar-overlay d-lg-none" 
