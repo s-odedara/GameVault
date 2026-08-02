@@ -79,9 +79,9 @@ class AdminUserDeleteView(generics.GenericAPIView):
         try:
             user_to_delete = User.objects.get(pk=user_id)
             if user_to_delete.is_superuser:
-                return Response({" error\: \Cannot delete a superuser.\}, status=status.HTTP_400_BAD_REQUEST)
- user_to_delete.is_active = False
- user_to_delete.save(update_fields=['is_active'])
- return Response({\success\: True, \message\: \User successfully deactivated.\});
- except User.DoesNotExist:
- return Response({\error\: \User not found.\}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Cannot delete a superuser."}, status=status.HTTP_400_BAD_REQUEST)
+            user_to_delete.is_active = False
+            user_to_delete.save(update_fields=['is_active'])
+            return Response({"success": True, "message": "User successfully deactivated."})
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
