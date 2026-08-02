@@ -36,8 +36,6 @@ const ExploreCard = memo(({ game, navigate }) => {
     <div
       ref={cardRef}
       className="gv-card"
-      data-aos="fade-up"
-      data-aos-delay="50"
       style={{ height: '100%' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -59,7 +57,6 @@ const ExploreCard = memo(({ game, navigate }) => {
             src={game.background_image || 'https://placehold.co/300x190/111827/4361ee?text=No+Image'}
             className="gv-card__image"
             alt={game.name}
-            loading="lazy"
             style={{ width: '100%', height: '100%' }}
           />
         )}
