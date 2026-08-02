@@ -104,66 +104,33 @@ function ExploreGames() {
   const [globalGames, setGlobalGames] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [searchTerm, setSearchTerm]   = useState('');
-  const [page, setPage]               = useState(1);
-  const [hasMore, setHasMore]         = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
-  const fetchGlobalGames = useCallback(async (search, pageNum = 1, isNewSearch = false) => {
-    if (isNewSearch) {
-      setLoading(true);
-      setPage(1);
-    } else {
-      setLoadingMore(true);
-    }
+  const fetchGlobalGames = useCallback(async (search) => {
+    setLoading(true);
 
     try {
       const url = search
-        ? `${API_BASE_URL}/rawg/games?search=${search}&page_size=40&page=${pageNum}`
-        : `${API_BASE_URL}/rawg/games?page_size=40&ordering=-rating&metacritic=80,100&page=${pageNum}`;
+        ? `${API_BASE_URL}/rawg/games?search=${search}&page_size=40`
+        : `${API_BASE_URL}/rawg/games?page_size=40&ordering=-rating&metacritic=80,100`;
       const res  = await fetch(url);
       const data = await res.json();
       
-      const newResults = data.results || [];
-      
-      if (data.next) {
-        setHasMore(true);
-      } else {
-        setHasMore(false);
-      }
-
-      setGlobalGames(prev => isNewSearch ? newResults : [...prev, ...newResults]);
+      setGlobalGames(data.results || []);
     } catch (err) {
       console.error('ExploreGames fetch error:', err);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   }, []);
 
-  const observer = useRef();
-  const lastGameElementRef = useCallback(node => {
-    if (loading || loadingMore) return;
-    if (observer.current) observer.current.disconnect();
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
-    
-    if (node) observer.current.observe(node);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, loadingMore, hasMore, searchTerm, fetchGlobalGames]);
-
   useEffect(() => { 
-    fetchGlobalGames('', 1, true); 
-  }, []);
-
+    fetchGlobalGames(''); 
+  }, [fetchGlobalGames]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchGlobalGames(searchTerm, 1, true);
+    fetchGlobalGames(searchTerm);
   };
 
   return (
@@ -209,7 +176,7 @@ function ExploreGames() {
 
       {loading ? (
         <div className="row g-4">
-          {[...Array(24)].map((_, i) => (
+          {[...Array(40)].map((_, i) => (
             <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6" key={i}>
               <div className="skeleton-card" style={{ height: 280 }} />
             </div>
@@ -219,12 +186,10 @@ function ExploreGames() {
         <>
           <div className="row g-4">
             {globalGames.map((game, idx) => {
-              const isLastElement = globalGames.length === idx + 1;
               const delay = Math.min((idx % 40) * 0.03, 0.2);
               
               return (
                 <div
-                  ref={isLastElement ? lastGameElementRef : null}
                   key={`${game.id}-${idx}`}
                   className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
                   style={{ animation: `fadeIn 0.5s ease-out forwards ${delay}s`, opacity: 0 }}
@@ -235,19 +200,11 @@ function ExploreGames() {
             })}
           </div>
           
-          <div style={{ height: '40px', marginTop: '30px', textAlign: 'center', width: '100%' }}>
-            {loadingMore && (
-              <div style={{ color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Loading more games...
-              </div>
-            )}
-            {!hasMore && globalGames.length > 0 && (
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                End of results.
-              </div>
-            )}
-          </div>
+          {globalGames.length === 0 && (
+            <div style={{ textAlign: 'center', marginTop: 40, color: 'var(--text-muted)' }}>
+              No games found. Try a different search.
+            </div>
+          )}
         </>
       )}
     </div>
