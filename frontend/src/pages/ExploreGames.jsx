@@ -104,26 +104,74 @@ function ExploreGames() {
   const [globalGames, setGlobalGames] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [searchTerm, setSearchTerm]   = useState('');
+  const [page, setPage]               = useState(1);
+  const [hasMore, setHasMore]         = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
+  const observerTarget = useRef(null);
 
-  useEffect(() => { fetchGlobalGames(''); }, []);
+  useEffect(() => { 
+    fetchGlobalGames('', 1, true); 
+  }, []);
 
-  const fetchGlobalGames = async (search) => {
-    setLoading(true);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          setPage(prev => {
+            const next = prev + 1;
+            fetchGlobalGames(searchTerm, next, false);
+            return next;
+          });
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasMore, loading, loadingMore, searchTerm]);
+
+  const fetchGlobalGames = async (search, pageNum = 1, isNewSearch = false) => {
+    if (isNewSearch) {
+      setLoading(true);
+      setPage(1);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
       const url = search
-        ? `${API_BASE_URL}/rawg/games?search=${search}&page_size=40`
-        : `${API_BASE_URL}/rawg/games?page_size=40&ordering=-rating&metacritic=80,100`;
+        ? `${API_BASE_URL}/rawg/games?search=${search}&page_size=40&page=${pageNum}`
+        : `${API_BASE_URL}/rawg/games?page_size=40&ordering=-rating&metacritic=80,100&page=${pageNum}`;
       const res  = await fetch(url);
       const data = await res.json();
-      setGlobalGames(data.results || []);
+      
+      const newResults = data.results || [];
+      if (newResults.length < 40) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+
+      setGlobalGames(prev => isNewSearch ? newResults : [...prev, ...newResults]);
     } catch (err) {
       console.error('ExploreGames fetch error:', err);
     } finally {
       setLoading(false);
-      // Re-run AOS so new items animate
+      setLoadingMore(false);
       setTimeout(() => window.AOS?.refresh(), 100);
     }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchGlobalGames(searchTerm, 1, true);
   };
 
   return (
@@ -147,7 +195,7 @@ function ExploreGames() {
         </div>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); fetchGlobalGames(searchTerm); }}
+          onSubmit={handleSearch}
           style={{ display: 'flex', gap: 0, maxWidth: 380, width: '100%' }}
         >
           <input
@@ -177,18 +225,25 @@ function ExploreGames() {
           ))}
         </div>
       ) : (
-        <div className="row g-4">
-          {globalGames.map((game, idx) => (
-            <div
-              key={game.id}
-              className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
-              data-aos="fade-up"
-              data-aos-delay={Math.min(idx * 30, 200)}
-            >
-              <ExploreCard game={game} navigate={navigate} />
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="row g-4">
+            {globalGames.map((game, idx) => (
+              <div
+                key={`${game.id}-${idx}`}
+                className="col-xl-2 col-lg-3 col-md-4 col-sm-6"
+                data-aos="fade-up"
+                data-aos-delay={Math.min((idx % 40) * 30, 200)}
+              >
+                <ExploreCard game={game} navigate={navigate} />
+              </div>
+            ))}
+          </div>
+          
+          <div ref={observerTarget} style={{ height: '20px', marginTop: '20px', textAlign: 'center' }}>
+            {loadingMore && <div style={{ color: 'var(--text-muted)' }}>Loading more...</div>}
+            {!hasMore && globalGames.length > 0 && <div style={{ color: 'var(--text-muted)' }}>No more games to load</div>}
+          </div>
+        </>
       )}
     </div>
   );
