@@ -666,11 +666,11 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
    ----------------------------------------------------------- */
 .gv-detail-hero {
   position: relative;
-  width: 100%;
+  margin-left: calc(-1 * var(--sidebar-width));
+  width: calc(100% + var(--sidebar-width));
   min-height: 75vh;
   background-size: cover;
   background-position: center top;
-  background-attachment: fixed;
 }
 
 .gv-detail-hero-overlay {
@@ -690,6 +690,7 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
   left: 0;
   right: 0;
   padding: 40px 48px;
+  padding-left: calc(var(--sidebar-width) + 48px);
 }
 
 .gv-detail-title {
@@ -1019,9 +1020,13 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
   overflow-x: hidden;
   z-index: 200;
   padding: 16px 12px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-subtle) transparent;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
   flex-shrink: 0;
+}
+
+.gv-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Main content area */
@@ -1406,3 +1411,5 @@ ul, ol { list-style: none; padding: 0; margin: 0; }
 
 /* AOS override — ensure visibility on load */
 [data-aos] { pointer-events: auto !important; }
+
+@media (max-width: 991px) { .gv-detail-hero { margin-left: 0; width: 100%; } .gv-detail-hero-content { padding-left: 20px; } }
