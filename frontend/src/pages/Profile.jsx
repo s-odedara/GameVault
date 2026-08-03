@@ -67,6 +67,20 @@ function Profile() {
 
   const handlePayoutSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!/^\d{9,18}$/.test(payoutDetails.bank_account_number)) {
+      toast.error('Account number must be 9-18 digits.');
+      return;
+    }
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(payoutDetails.ifsc_code)) {
+      toast.error('Invalid IFSC Code format (e.g. SBIN0001234).');
+      return;
+    }
+    if (payoutDetails.account_holder_name.trim().length < 3) {
+      toast.error('Enter a valid Account Holder Name.');
+      return;
+    }
+
     setIsSavingPayout(true);
     try {
       const response = await fetch(`${API_BASE_URL}/users/profile/payout-details/`, {
@@ -80,6 +94,7 @@ function Profile() {
       const data = await response.json();
       if (response.ok) {
         toast.success(data.message || 'Payout details saved!');
+        setActiveTab('analytics');
       } else {
         toast.error(data.error || 'Failed to save payout details');
       }
@@ -194,14 +209,14 @@ function Profile() {
 
             {activeTab === 'payout' && (
               <>
-                <h3 className="text-warning fw-bold mb-4">Payout Settings</h3>
-                <p className="text-muted mb-4">Configure your bank details to receive payments for sales and rentals.</p>
-                <form onSubmit={handlePayoutSubmit}>
+                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--accent-glow)' }} className="mb-2">Payout Settings</h3>
+                <p style={{ color: 'var(--text-muted)' }} className="mb-4">Configure your bank details to receive payments for sales and rentals.</p>
+                <form onSubmit={handlePayoutSubmit} className="glass-card" style={{ padding: '24px', background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.1)' }}>
                   <div className="mb-3">
                     <label className="form-label text-secondary">Bank Name</label>
                     <input 
                       type="text" 
-                      className="form-control bg-dark text-light border-secondary" 
+                      className="gv-form-input" 
                       value={payoutDetails.bank_name}
                       onChange={(e) => setPayoutDetails({...payoutDetails, bank_name: e.target.value})}
                       placeholder="e.g. State Bank of India"
@@ -212,7 +227,7 @@ function Profile() {
                     <label className="form-label text-secondary">Account Holder Name</label>
                     <input 
                       type="text" 
-                      className="form-control bg-dark text-light border-secondary" 
+                      className="gv-form-input" 
                       value={payoutDetails.account_holder_name}
                       onChange={(e) => setPayoutDetails({...payoutDetails, account_holder_name: e.target.value})}
                       placeholder="As per bank records"
@@ -223,7 +238,7 @@ function Profile() {
                     <label className="form-label text-secondary">Account Number</label>
                     <input 
                       type="text" 
-                      className="form-control bg-dark text-light border-secondary" 
+                      className="gv-form-input" 
                       value={payoutDetails.bank_account_number}
                       onChange={(e) => setPayoutDetails({...payoutDetails, bank_account_number: e.target.value})}
                       placeholder={payoutDetails.bank_account_number ? (payoutDetails.bank_account_number.length > 4 ? `**** **** ${payoutDetails.bank_account_number.slice(-4)}` : payoutDetails.bank_account_number) : "Enter account number"}
@@ -234,14 +249,14 @@ function Profile() {
                     <label className="form-label text-secondary">IFSC Code</label>
                     <input 
                       type="text" 
-                      className="form-control bg-dark text-light border-secondary" 
+                      className="gv-form-input" 
                       value={payoutDetails.ifsc_code}
                       onChange={(e) => setPayoutDetails({...payoutDetails, ifsc_code: e.target.value.toUpperCase()})}
                       placeholder="e.g. SBIN0001234"
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-warning fw-bold w-100 rounded-pill" disabled={isSavingPayout}>
+                  <button type="submit" className="btn-gv-primary w-100" disabled={isSavingPayout}>
                     {isSavingPayout ? 'Saving...' : 'Save Payout Details'}
                   </button>
                 </form>
