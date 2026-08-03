@@ -318,6 +318,7 @@ function MyOrders() {
   const [rentals, setRentals] = useState([]);
   const [lentItems, setLentItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [processingOrderId, setProcessingOrderId] = useState(null);
 
   const [disputeModal, setDisputeModal] = useState({ isOpen: false, type: '', orderId: null });
   const [disputeReason, setDisputeReason] = useState('');
@@ -343,6 +344,7 @@ function MyOrders() {
   }, [token]);
 
   const handleUpdateStatus = async (type, orderId, newStatus, otp = null) => {
+    setProcessingOrderId(orderId);
     try {
       if (otp) {
         // Handover OTP Verification flow
@@ -390,6 +392,8 @@ function MyOrders() {
       }
     } catch { 
       toast.error('Server error.'); 
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
@@ -403,6 +407,7 @@ function MyOrders() {
       toast.error("Please provide a reason for the dispute.");
       return;
     }
+    setProcessingOrderId('dispute');
     try {
       const res = await fetch(`${API_BASE_URL}/disputes/raise/`, {
         method: 'POST',
@@ -418,6 +423,8 @@ function MyOrders() {
       }
     } catch {
       toast.error("Server error while raising dispute.");
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 

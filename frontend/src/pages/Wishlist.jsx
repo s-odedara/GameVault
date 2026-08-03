@@ -84,7 +84,7 @@ function Wishlist() {
                 {/* FIX 1.8: gv-wishlist-card class adds hover scale + purple glow */}
                 <div className="gv-card gv-wishlist-card" style={{ height: '100%' }}>
                   <div style={{ position: 'relative', height: 165, cursor: 'pointer' }} onClick={() => navigate(`/game/${game.id}`)}>
-                    <img src={imageSrc} alt={game.title} className="gv-card__image" style={{ height: '100%' }} loading="lazy" />
+                    <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} src={imageSrc} alt={game.title} className="gv-card__image" style={{ height: '100%' }} loading="lazy" />
                     {/* Wishlist remove button — purple, no yellow */}
                     <button
                       onClick={e => { e.stopPropagation(); handleRemove(game.id); }}

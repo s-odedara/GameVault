@@ -11,7 +11,8 @@ from .views import (
     RawgProxyView,
     GamingNewsView,
     CreateRentalOrderView, UpdateRentalStatusView, MyRentalsView, MyLentItemsView,
-    VerifyRentalPaymentView, VerifyHandoverOTPView, make_me_admin, RaiseDisputeView
+    VerifyRentalPaymentView, VerifyHandoverOTPView, make_me_admin, RaiseDisputeView,
+    PayoutDetailsView
 )
 from .admin_views import (
     AdminDashboardStatsView, AdminUsersView,
@@ -48,6 +49,7 @@ urlpatterns = [
     path('marketplace/my-orders/',                 MyOrdersView.as_view(),            name='marketplace-my-orders'),
     path('marketplace/my-sales/',                  MySalesView.as_view(),             name='marketplace-my-sales'),
     path('marketplace/orders/<int:order_id>/update-status/', UpdateOrderStatusView.as_view(), name='marketplace-update-order-status'),
+    path('users/profile/payout-details/',          PayoutDetailsView.as_view(),       name='payout-details'),
 
     # ── Rentals ──────────────────────────────────────────────
     path('rentals/checkout/<int:listing_id>/',     CreateRentalOrderView.as_view(),   name='rentals-checkout'),

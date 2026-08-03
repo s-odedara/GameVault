@@ -632,12 +632,12 @@ function ListingDetail() {
         {/* Image */}
         <div className="col-md-5">
           <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border-card)' }}>
-            <img src={currentImg} alt={listing.title} style={{ width: '100%', height: 320, objectFit: 'cover', transition: 'all 0.3s' }} />
+            <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} src={currentImg} alt={listing.title} style={{ width: '100%', height: 320, objectFit: 'cover', transition: 'all 0.3s' }} />
           </div>
           {allImages.length > 1 && (
             <div style={{ display: 'flex', gap: 10, marginTop: 12, overflowX: 'auto' }}>
               {allImages.map((src, idx) => (
-                <img key={idx} src={src} alt={`Thumbnail ${idx+1}`} 
+                <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} key={idx} src={src} alt={`Thumbnail ${idx+1}`} 
                      onClick={() => setMainImageIdx(idx)}
                      style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                               border: idx === mainImageIdx ? '2px solid var(--accent-glow)' : '1px solid var(--border-card)',

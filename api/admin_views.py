@@ -171,9 +171,20 @@ class AdminDisputesView(generics.GenericAPIView):
         results = []
         for d in disputes:
             item_details = None
+            payout_details = None
             if d.order_type == 'sale':
                 order = sale_orders.get(d.order_id)
                 if order:
+                    try:
+                        seller_profile = order.seller.profile
+                        payout_details = {
+                            "bank_name": seller_profile.bank_name,
+                            "account_holder_name": seller_profile.account_holder_name,
+                            "bank_account_number": seller_profile.bank_account_number,
+                            "ifsc_code": seller_profile.ifsc_code
+                        }
+                    except Exception:
+                        pass
                     item_details = {
                         'buyer': order.buyer.username,
                         'seller': order.seller.username,
@@ -189,6 +200,16 @@ class AdminDisputesView(generics.GenericAPIView):
             elif d.order_type == 'rent':
                 order = rent_orders.get(d.order_id)
                 if order:
+                    try:
+                        owner_profile = order.owner.profile
+                        payout_details = {
+                            "bank_name": owner_profile.bank_name,
+                            "account_holder_name": owner_profile.account_holder_name,
+                            "bank_account_number": owner_profile.bank_account_number,
+                            "ifsc_code": owner_profile.ifsc_code
+                        }
+                    except Exception:
+                        pass
                     item_details = {
                         'buyer': order.renter.username, # labeled buyer for generic UI mapping
                         'seller': order.owner.username,
@@ -210,7 +231,8 @@ class AdminDisputesView(generics.GenericAPIView):
                 'reason': d.reason,
                 'status': d.status,
                 'created_at': d.created_at,
-                'item_details': item_details
+                'item_details': item_details,
+                'payout_details': payout_details
             })
             
         return Response({"disputes": results})

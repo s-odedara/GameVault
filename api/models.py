@@ -51,6 +51,12 @@ class Profile(models.Model):
     gamer_tag = models.CharField(max_length=50, blank=True, null=True)
     wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+    # Payout Details
+    account_holder_name = models.CharField(max_length=255, blank=True, null=True)
+    bank_account_number = models.CharField(max_length=50, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=20, blank=True, null=True)
+    bank_name = models.CharField(max_length=255, blank=True, null=True)
+
     def __str__(self):
         return f"{self.user.username}'s Profile"
 

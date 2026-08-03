@@ -310,7 +310,7 @@ export default function AdminDashboard() {
                   <div key={l.id} style={{ display: 'flex', gap: 16, padding: 16, background: 'var(--bg-elevated)', borderRadius: 12, alignItems: 'center' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, width: 128, flexShrink: 0 }}>
                       {[l.image, l.image2, l.image3, l.image4].filter(Boolean).map((img, idx) => (
-                        <img 
+                        <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} 
                           key={idx}
                           src={img} 
                           alt={`${l.title} - ${idx+1}`} 
@@ -347,7 +347,7 @@ export default function AdminDashboard() {
                   <div key={l.id} style={{ display: 'flex', gap: 16, padding: 16, background: 'var(--bg-elevated)', borderRadius: 12, alignItems: 'center' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, width: 128, flexShrink: 0 }}>
                       {[l.image, l.image2, l.image3, l.image4].filter(Boolean).map((img, idx) => (
-                        <img 
+                        <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} 
                           key={idx}
                           src={img} 
                           alt={`${l.title} - ${idx+1}`} 
@@ -481,7 +481,7 @@ export default function AdminDashboard() {
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>Item Images</div>
                             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                               {d.item_details.images.filter(Boolean).map((imgUrl, i) => (
-                                <img 
+                                <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} 
                                   key={i} 
                                   src={imgUrl} 
                                   alt="Item image" 
@@ -492,6 +492,18 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {d.payout_details && (
+                      <div style={{ marginTop: 8, padding: 12, background: 'rgba(255,193,7,0.05)', border: '1px solid rgba(255,193,7,0.2)', borderRadius: 8 }}>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--accent-glow)', fontWeight: 600, marginBottom: 8 }}>🏦 Seller Payout Details (Masked)</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.85rem' }}>
+                          <div><strong>Bank:</strong> {d.payout_details.bank_name || 'Not provided'}</div>
+                          <div><strong>Holder:</strong> {d.payout_details.account_holder_name || 'Not provided'}</div>
+                          <div><strong>Account:</strong> {d.payout_details.bank_account_number ? `****${d.payout_details.bank_account_number.slice(-4)}` : 'Not provided'}</div>
+                          <div><strong>IFSC:</strong> {d.payout_details.ifsc_code || 'Not provided'}</div>
+                        </div>
                       </div>
                     )}
 
@@ -536,7 +548,7 @@ export default function AdminDashboard() {
             cursor: 'zoom-out'
           }}
         >
-          <img 
+          <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} 
             src={fullScreenImage} 
             alt="Full screen preview" 
             style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: 8, boxShadow: '0 0 20px rgba(0,0,0,0.5)' }} 

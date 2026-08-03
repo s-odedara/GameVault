@@ -177,7 +177,7 @@ function MyListings() {
                   <div className="gv-card" style={{ height: '100%' }}>
                     <div style={{ height: 160, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}
                          onClick={() => navigate(`/marketplace/listing/${item.id}`)}>
-                      <img src={img} alt={item.title} className="gv-card__image" />
+                      <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} src={img} alt={item.title} className="gv-card__image" />
                       <div style={{ position: 'absolute', top: 8, left: 8 }}>
                         <span className={`gv-badge ${statusColors[item.status] || 'gv-badge-dark'}`}>{item.status}</span>
                       </div>

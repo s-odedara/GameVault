@@ -28,7 +28,7 @@ function ListingCard({ item, navigate }) {
     <div ref={cardRef} className="gv-card" style={{ height: '100%', cursor: 'pointer' }}
          onClick={() => navigate(`/marketplace/listing/${item.id}`)}>
       <div style={{ height: 186, overflow: 'hidden', position: 'relative' }}>
-        <img src={img} alt={item.title} className="gv-card__image" />
+        <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} src={img} alt={item.title} className="gv-card__image" />
         <div style={{ position: 'absolute', top: 8, right: 8 }}>
           <span className={`gv-badge ${conditionCls[item.condition] || 'gv-badge-dark'}`}>{item.condition}</span>
         </div>

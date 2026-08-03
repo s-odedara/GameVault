@@ -12,7 +12,7 @@ const CategoryCard = memo(({ game, navigate, onAdd }) => {
     let timer;
     if (isHovered && videoRef.current) {
       timer = setTimeout(() => {
-        if (videoRef.current) videoRef.current.play().catch(e => console.log(e));
+        if (videoRef.current) videoRef.current.play().catch(e => console.error(e));
       }, 300);
     }
     return () => clearTimeout(timer);
@@ -41,7 +41,7 @@ const CategoryCard = memo(({ game, navigate, onAdd }) => {
             muted loop playsInline className="w-100 h-100" style={{ objectFit: 'cover' }} 
           />
         ) : (
-          <img src={game.background_image || 'https://placehold.co/300x200?text=No+Image'} className="w-100 h-100" alt={game.name} loading="lazy" style={{ objectFit: 'cover' }}/>
+          <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} src={game.background_image || 'https://placehold.co/300x200?text=No+Image'} className="w-100 h-100" alt={game.name} loading="lazy" style={{ objectFit: 'cover' }}/>
         )}
       </div>
       

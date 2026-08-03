@@ -35,7 +35,7 @@ function VaultCard({ game, onDelete, onToggleWishlist }) {
         style={{ height: 190, overflow: 'hidden', position: 'relative', cursor: 'pointer', flexShrink: 0 }}
         onClick={() => navigate(`/game/${game.id}`)}
       >
-        <img src={imageSrc} alt={game.title} className="gv-card__image" />
+        <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} src={imageSrc} alt={game.title} className="gv-card__image" />
         <div style={{ position: 'absolute', top: 8, left: 8 }}>
           <span className={`gv-badge ${statusColors[game.status] || 'gv-badge-dark'}`}>{game.status}</span>
         </div>

@@ -130,7 +130,7 @@ function SellItem() {
             {previews.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12, marginTop: 12 }}>
                 {previews.map((src, idx) => (
-                  <img key={idx} src={src} alt={`Preview ${idx + 1}`} style={{ height: 100, width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-card)' }} />
+                  <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} key={idx} src={src} alt={`Preview ${idx + 1}`} style={{ height: 100, width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-card)' }} />
                 ))}
               </div>
             )}

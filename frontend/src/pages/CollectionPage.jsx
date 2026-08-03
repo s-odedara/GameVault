@@ -229,7 +229,7 @@ function CollectionPage() {
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
                 <Link to={`/global-game/${game.id}`} style={viewMode === 'grid' ? {} : { width: '280px', flexShrink: 0 }}>
-                  <img 
+                  <img  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300?text=Image+Not+Found"; }} 
                     src={game.background_image || 'https://placehold.co/600x400'} 
                     className="card-img-top" 
                     alt={game.name || 'Game Image'} 
