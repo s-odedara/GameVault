@@ -10,16 +10,17 @@ function SellItem() {
   const [form, setForm] = useState({
     title: '', description: '', category: 'Physical Game',
     condition: 'Good', price: '', location: '',
-    seller_contact: '',   // PART 4.1: required 10-digit mobile
-    image: null,
+    seller_contact: '',
   });
-  const [preview, setPreview] = useState(null);
+  const [images, setImages] = useState([]);
+  const [previews, setPreviews] = useState([]);
 
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) { set('image', file); setPreview(URL.createObjectURL(file)); }
+    const files = Array.from(e.target.files).slice(0, 4); // max 4 photos
+    setImages(files);
+    setPreviews(files.map(f => URL.createObjectURL(f)));
   };
 
   const handleSubmit = async (e) => {
@@ -33,10 +34,17 @@ function SellItem() {
     if (!form.location.trim()) {
       toast.error('Location is required.'); return;
     }
-    if (!form.image) { toast.error('A photo is required for all listings.'); return; }
+    if (images.length === 0) { toast.error('At least one photo is required for all listings.'); return; }
     setIsSubmitting(true);
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => { if (v !== null) fd.append(k, v); });
+    
+    // Append images (image, image2, image3, image4)
+    images.forEach((file, idx) => {
+      const fieldName = idx === 0 ? 'image' : `image${idx + 1}`;
+      fd.append(fieldName, file);
+    });
+    
     try {
       const res = await fetch(`${API_BASE_URL}/listings/`, {
         method: 'POST', headers: { 'Authorization': `Token ${token}` }, body: fd,
@@ -116,12 +124,15 @@ function SellItem() {
           </div>
 
           <div style={{ marginBottom: 24 }}>
-            <label className="gv-form-label">Photo * <span style={{ color: 'var(--accent-danger)', fontWeight: 400, fontSize: '0.72rem' }}>Required</span></label>
-            <input type="file" accept="image/*" className="gv-form-input" style={{ padding: '7px 12px' }}
+            <label className="gv-form-label">Photos (Up to 4) * <span style={{ color: 'var(--accent-danger)', fontWeight: 400, fontSize: '0.72rem' }}>Required</span></label>
+            <input type="file" accept="image/*" multiple className="gv-form-input" style={{ padding: '7px 12px' }}
               onChange={handleImageChange} disabled={isSubmitting} />
-            {preview && (
-              <img src={preview} alt="Preview" style={{ marginTop: 12, maxHeight: 180, borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border-card)', width: '100%', objectFit: 'cover' }} />
+            {previews.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12, marginTop: 12 }}>
+                {previews.map((src, idx) => (
+                  <img key={idx} src={src} alt={`Preview ${idx + 1}`} style={{ height: 100, width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-card)' }} />
+                ))}
+              </div>
             )}
           </div>
 

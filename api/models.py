@@ -49,6 +49,7 @@ class Profile(models.Model):
     bio = models.TextField(blank=True, null=True)
     favourite_genres = models.CharField(max_length=200, blank=True, null=True)
     gamer_tag = models.CharField(max_length=50, blank=True, null=True)
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -110,6 +111,9 @@ class Listing(models.Model):
     location = models.CharField(max_length=100, blank=True, null=True)
     # ── PART 4.1: Photo and seller_contact are now REQUIRED (no null/blank) ──
     image = models.ImageField(upload_to='marketplace_images/', validators=[validate_image_file])
+    image2 = models.ImageField(upload_to='marketplace_images/', validators=[validate_image_file], blank=True, null=True)
+    image3 = models.ImageField(upload_to='marketplace_images/', validators=[validate_image_file], blank=True, null=True)
+    image4 = models.ImageField(upload_to='marketplace_images/', validators=[validate_image_file], blank=True, null=True)
     seller_contact = models.CharField(max_length=10)   # exactly 10-digit mobile
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
     is_approved = models.BooleanField(default=False)
@@ -150,6 +154,9 @@ class RentalListing(models.Model):
     location = models.CharField(max_length=100, blank=True, null=True)
     # Photo and contact required (Part 4.1 rule applied here too)
     image = models.ImageField(upload_to='rental_images/', validators=[validate_image_file])
+    image2 = models.ImageField(upload_to='rental_images/', validators=[validate_image_file], blank=True, null=True)
+    image3 = models.ImageField(upload_to='rental_images/', validators=[validate_image_file], blank=True, null=True)
+    image4 = models.ImageField(upload_to='rental_images/', validators=[validate_image_file], blank=True, null=True)
     owner_contact = models.CharField(max_length=10)
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Available')
     is_approved = models.BooleanField(default=False)

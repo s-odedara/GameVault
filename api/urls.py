@@ -16,7 +16,8 @@ from .views import (
 from .admin_views import (
     AdminDashboardStatsView, AdminUsersView,
     AdminListingsView, AdminApproveListingView, AdminUserDeleteView,
-    AdminEscrowOrdersView, AdminDisputesView, AdminResolveDisputeView
+    AdminEscrowOrdersView, AdminDisputesView, AdminResolveDisputeView,
+    AdminUserDetailsView
 )
 
 router = DefaultRouter()
@@ -70,6 +71,7 @@ urlpatterns = [
     path('admin/stats/', AdminDashboardStatsView.as_view(), name='admin-stats'),
     path('admin/users/', AdminUsersView.as_view(), name='admin-users'),
     path('admin/users/<int:user_id>/', AdminUserDeleteView.as_view(), name='admin-user-delete'),
+    path('admin/users/<int:user_id>/details/', AdminUserDetailsView.as_view(), name='admin-user-details'),
     path('admin/listings/', AdminListingsView.as_view(), name='admin-listings'),
     path('admin/listings/<str:listing_type>/<int:listing_id>/approve/', AdminApproveListingView.as_view(), name='admin-approve-listing'),
     path('admin/escrow/', AdminEscrowOrdersView.as_view(), name='admin-escrow'),

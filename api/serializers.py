@@ -189,15 +189,17 @@ class ListingSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        if instance.image:
-            url = instance.image.url
-            if not url.startswith('http'):
-                request = self.context.get('request')
-                if request:
+        request = self.context.get('request')
+        
+        for img_field in ['image', 'image2', 'image3', 'image4']:
+            img = getattr(instance, img_field, None)
+            if img:
+                url = img.url
+                if not url.startswith('http') and request:
                     url = request.build_absolute_uri(url)
-            ret['image'] = url
-        else:
-            ret['image'] = None
+                ret[img_field] = url
+            else:
+                ret[img_field] = None
         return ret
 
     def validate_title(self, value):
@@ -231,6 +233,21 @@ class ListingSerializer(serializers.ModelSerializer):
             validate_image_file(value)
         return value
 
+    def validate_image2(self, value):
+        if value:
+            validate_image_file(value)
+        return value
+
+    def validate_image3(self, value):
+        if value:
+            validate_image_file(value)
+        return value
+
+    def validate_image4(self, value):
+        if value:
+            validate_image_file(value)
+        return value
+
     def validate_seller_contact(self, value):
         """PART 4.1: Seller's contact must be exactly 10 digits."""
         return validate_10_digit_phone(value)
@@ -247,15 +264,17 @@ class RentalListingSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        if instance.image:
-            url = instance.image.url
-            if not url.startswith('http'):
-                request = self.context.get('request')
-                if request:
+        request = self.context.get('request')
+        
+        for img_field in ['image', 'image2', 'image3', 'image4']:
+            img = getattr(instance, img_field, None)
+            if img:
+                url = img.url
+                if not url.startswith('http') and request:
                     url = request.build_absolute_uri(url)
-            ret['image'] = url
-        else:
-            ret['image'] = None
+                ret[img_field] = url
+            else:
+                ret[img_field] = None
         return ret
 
     def validate_rental_period(self, value):
@@ -278,6 +297,21 @@ class RentalListingSerializer(serializers.ModelSerializer):
         return validate_10_digit_phone(value)
 
     def validate_image(self, value):
+        if value:
+            validate_image_file(value)
+        return value
+
+    def validate_image2(self, value):
+        if value:
+            validate_image_file(value)
+        return value
+
+    def validate_image3(self, value):
+        if value:
+            validate_image_file(value)
+        return value
+
+    def validate_image4(self, value):
         if value:
             validate_image_file(value)
         return value

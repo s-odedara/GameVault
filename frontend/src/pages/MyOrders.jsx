@@ -318,6 +318,9 @@ function MyOrders() {
   const [rentals, setRentals] = useState([]);
   const [lentItems, setLentItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [disputeModal, setDisputeModal] = useState({ isOpen: false, type: '', orderId: null });
+  const [disputeReason, setDisputeReason] = useState('');
   
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
@@ -390,17 +393,25 @@ function MyOrders() {
     }
   };
 
-  const handleRaiseDispute = async (type, orderId) => {
-    const reason = window.prompt("Please briefly explain why you are raising a dispute for this item:");
-    if (!reason) return;
+  const handleRaiseDispute = (type, orderId) => {
+    setDisputeModal({ isOpen: true, type, orderId });
+    setDisputeReason('');
+  };
+
+  const submitDispute = async () => {
+    if (!disputeReason.trim()) {
+      toast.error("Please provide a reason for the dispute.");
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/disputes/raise/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
-        body: JSON.stringify({ order_type: type === 'buy' ? 'sale' : 'rent', order_id: orderId, reason })
+        body: JSON.stringify({ order_type: disputeModal.type === 'buy' ? 'sale' : 'rent', order_id: disputeModal.orderId, reason: disputeReason })
       });
       if (res.ok) {
         toast.success("Dispute raised. Our team will review it shortly.");
+        setDisputeModal({ isOpen: false, type: '', orderId: null });
       } else {
         const err = await res.json();
         toast.error(err.error || "Failed to raise dispute.");
@@ -482,6 +493,27 @@ function MyOrders() {
             <RentalOrderCard key={order.id} order={order} mode={mode} onUpdateStatus={handleUpdateStatus} onRaiseDispute={handleRaiseDispute} />
           )
         )
+      )}
+
+      {/* Dispute Modal */}
+      {disputeModal.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 500, border: '1px solid var(--border-subtle)' }} data-aos="zoom-in">
+            <h3 style={{ marginBottom: 16, color: 'var(--accent-danger)' }}>Raise a Dispute</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 16 }}>Please provide detailed information about why you are raising a dispute for this item. Our team will review it shortly.</p>
+            <textarea 
+              className="gv-form-input" 
+              style={{ width: '100%', minHeight: 120, marginBottom: 16, resize: 'vertical' }} 
+              placeholder="Explain your dispute reason..."
+              value={disputeReason}
+              onChange={(e) => setDisputeReason(e.target.value)}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button className="btn-gv-ghost" onClick={() => setDisputeModal({ isOpen: false, type: '', orderId: null })}>Cancel</button>
+              <button className="btn-gv-primary" style={{ background: 'var(--accent-danger)' }} onClick={submitDispute}>Submit Dispute</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

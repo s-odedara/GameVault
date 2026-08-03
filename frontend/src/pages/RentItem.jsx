@@ -7,7 +7,6 @@ function RentItem() {
   const navigate = useNavigate();
   const token    = localStorage.getItem('token');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [preview, setPreview]           = useState(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -18,14 +17,16 @@ function RentItem() {
     security_deposit: '0',
     location: '',
     owner_contact: '',
-    image: null,
   });
+  const [images, setImages] = useState([]);
+  const [previews, setPreviews] = useState([]);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const handleImageChange = e => {
-    const file = e.target.files[0];
-    if (file) { set('image', file); setPreview(URL.createObjectURL(file)); }
+    const files = Array.from(e.target.files).slice(0, 4); // max 4 photos
+    setImages(files);
+    setPreviews(files.map(f => URL.createObjectURL(f)));
   };
 
   const handleSubmit = async (e) => {
@@ -36,10 +37,17 @@ function RentItem() {
       toast.error('Contact number must be exactly 10 digits.');
       return;
     }
-    if (!form.image) { toast.error('A photo is required.'); return; }
+    if (images.length === 0) { toast.error('At least one photo is required.'); return; }
     setIsSubmitting(true);
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => { if (v !== null && v !== '') fd.append(k, v); });
+    
+    // Append images (image, image2, image3, image4)
+    images.forEach((file, idx) => {
+      const fieldName = idx === 0 ? 'image' : `image${idx + 1}`;
+      fd.append(fieldName, file);
+    });
+    
     try {
       const res = await fetch(`${API_BASE_URL}/rentals/`, {
         method: 'POST', headers: { 'Authorization': `Token ${token}` }, body: fd,
@@ -158,16 +166,17 @@ function RentItem() {
           {/* Photo (required) */}
           <div style={{ marginBottom: 24 }}>
             <label className="gv-form-label">
-              Game Photo *&nbsp;
+              Photos (Up to 4) *&nbsp;
               <span style={{ color: 'var(--accent-danger)', fontWeight: 400, fontSize: '0.72rem' }}>Required</span>
             </label>
-            <input type="file" accept="image/*" className="gv-form-input" required
+            <input type="file" accept="image/*" multiple className="gv-form-input" required={images.length === 0}
               style={{ padding: '7px 12px' }} onChange={handleImageChange} disabled={isSubmitting} />
-            {preview && (
-              <img src={preview} alt="Preview" style={{
-                marginTop: 12, maxHeight: 180, borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-card)', width: '100%', objectFit: 'cover',
-              }} />
+            {previews.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12, marginTop: 12 }}>
+                {previews.map((src, idx) => (
+                  <img key={idx} src={src} alt={`Preview ${idx + 1}`} style={{ height: 100, width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-card)' }} />
+                ))}
+              </div>
             )}
           </div>
 

@@ -586,6 +586,7 @@ function ListingDetail() {
   const [loading, setLoading]   = useState(true);
   const [showModal, setShowModal]= useState(false);
   const [orderDone, setOrderDone]= useState(false);
+  const [mainImageIdx, setMainImageIdx] = useState(0);
 
   const queryParams = new URLSearchParams(location.search);
   const type = queryParams.get('type') || 'buy';
@@ -599,9 +600,21 @@ function ListingDetail() {
       .catch(() => setLoading(false));
   }, [id, isRent]);
 
-  const img = listing?.image
-    ? (listing.image.startsWith('http') ? listing.image : `${SERVER_BASE_URL}${listing.image}`)
-    : 'https://placehold.co/600x400/111827/4361ee?text=No+Photo';
+  // Gather all available images
+  const allImages = [];
+  if (listing) {
+    ['image', 'image2', 'image3', 'image4'].forEach(key => {
+      if (listing[key]) {
+        allImages.push(listing[key].startsWith('http') ? listing[key] : `${SERVER_BASE_URL}${listing[key]}`);
+      }
+    });
+  }
+  
+  if (allImages.length === 0) {
+    allImages.push('https://placehold.co/600x400/111827/4361ee?text=No+Photo');
+  }
+  
+  const currentImg = allImages[mainImageIdx] || allImages[0];
 
   if (loading) return <div style={{ padding: 40 }}><GVSpinner label="Loading listing…" /></div>;
   if (!listing) return <div style={{ padding: 40, textAlign: 'center' }}>Listing not found.</div>;
@@ -619,8 +632,19 @@ function ListingDetail() {
         {/* Image */}
         <div className="col-md-5">
           <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border-card)' }}>
-            <img src={img} alt={listing.title} style={{ width: '100%', height: 320, objectFit: 'cover' }} />
+            <img src={currentImg} alt={listing.title} style={{ width: '100%', height: 320, objectFit: 'cover', transition: 'all 0.3s' }} />
           </div>
+          {allImages.length > 1 && (
+            <div style={{ display: 'flex', gap: 10, marginTop: 12, overflowX: 'auto' }}>
+              {allImages.map((src, idx) => (
+                <img key={idx} src={src} alt={`Thumbnail ${idx+1}`} 
+                     onClick={() => setMainImageIdx(idx)}
+                     style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                              border: idx === mainImageIdx ? '2px solid var(--accent-glow)' : '1px solid var(--border-card)',
+                              opacity: idx === mainImageIdx ? 1 : 0.6 }} />
+              ))}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <span className={`gv-badge ${conditionCls[listing.condition] || 'gv-badge-dark'}`}>{listing.condition}</span>
             <span className="gv-badge gv-badge-dark">{listing.category}</span>
